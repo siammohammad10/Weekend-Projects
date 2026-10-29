@@ -144,15 +144,59 @@ Weekend-Projects/ece-stockroom/
 
 Code formatting uses Prettier (`npm install`, then `npm run format`).
 
-### Configuration
+## Customizing
 
-Edit `js/config.js` before each term:
+Everything below is a plain text edit. No build step, so save the file and refresh the page.
 
-- `TERM`, the term name shown across the app
-- `RENTAL_DUE`, the date rentals are due back
-- `LOGO_URL`, the path to a logo file
+### Logo
 
-The official Texas Tech logo isn't included in this repository. If the department adopts the app, the logo should be the approved file from TTU's brand office.
+The official Texas Tech logo isn't included in this repository. Only use the approved file from TTU's brand office.
+
+1. Add the file to an `assets` folder, for example `ece-stockroom/assets/ttu-logo.svg`. The sign-in screen is always dark, so use the white or reversed version of the logo.
+2. In `js/config.js`, set `LOGO_URL` to its path:
+
+   ```js
+   const LOGO_URL = 'assets/ttu-logo.svg';
+   ```
+
+The logo replaces the red mark and the "Texas Tech University" text at the top of the sign-in screen. It's shown at up to 64 px tall. Change `.logo-img` in `css/styles.css` to make it bigger or smaller.
+
+The small red mark in the top bar and the browser tab icon are separate. They're the SVG inside the `brand` button in `index.html` and the `favicon.svg` file.
+
+### Term and rental due date
+
+In `js/config.js`:
+
+- `TERM` is the term name shown across the app, like `'Spring 2027'`.
+- `RENTAL_DUE` is the date rentals are due back. The month starts at 0, so `new Date(2027, 4, 7)` means May 7, 2027.
+
+### Teams, instructors, students and budgets
+
+All in the `seed()` function in `js/store.js`:
+
+- `instructors` lists each instructor with their course and section.
+- `teams` lists each team with its project, its instructor, its `budget` (that course's allocation in dollars) and its `members`.
+- Student usernames are made from the member names: the first letter of the first name plus the last name, so "Jordan Reyes" becomes `jreyes`.
+- The staff account is the line that adds `stockroom`. Change the username or name there.
+- The demo accounts shown on the sign-in screen are listed in `js/views/login.js`. Update that list if you rename students.
+
+The example orders, certificates, 3D print jobs and print charges are in the same file (`orders`, `certs`, `seedPrints` and `seedCharges`). Delete them to start with a clean slate.
+
+### Parts and categories
+
+The starting catalog is in `js/catalog.js`: `BASE_CATS` for categories and `BASE_ITEMS` for parts, with price, rental fee, mode, stock, limits, description and specs. Each field is explained at the top of the file.
+
+You can also skip the code entirely. Sign in as `stockroom` and use **Inventory** to add, edit and hide products, or import a CSV.
+
+### Colors and text
+
+- Colors are set once at the top of `css/styles.css`. `--accent` is the scarlet used for buttons, prices and links. Dark mode has its own values in the block right after it.
+- The sign-in headline and the line under it are in `js/views/login.js`.
+- The footer note ("Stockroom concept · demo data") is in `js/app.js`.
+
+### After changing the demo data
+
+Each browser keeps its own saved copy of the demo, so changes to `store.js` or `catalog.js` won't show up for someone who has already opened the site. They can click **Reset demo data** at the bottom of any page. To reset it for every visitor at once, change the `KEY` value at the top of `js/store.js`, for example from `ece-stockroom-demo-v4` to `ece-stockroom-demo-v5`.
 
 ## What it would take to run this for real
 
