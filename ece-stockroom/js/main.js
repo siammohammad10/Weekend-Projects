@@ -40,6 +40,10 @@ document.addEventListener('input', e => {
     const er = $('#login-err');
     if (er) er.hidden = true;
   }
+  if (e.target.id === 'desk-q') {
+    U.deskQ = e.target.value;
+    refreshDesk();
+  }
   if (e.target.id === 'inv-q') {
     U.invQ = e.target.value;
     refreshInv();
@@ -122,7 +126,27 @@ document.addEventListener('drop', e => {
   handleFile(z.dataset.drop, e.dataTransfer.files[0]);
 });
 document.addEventListener('keydown', e => {
+  const typing = /INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName || '');
+  if (e.key === '/' && U.view === 'desk' && S.role === 'admin' && !typing && $('#sheet-root').hidden) {
+    e.preventDefault();
+    focusDeskSearch(true);
+    return;
+  }
+  if (e.key === 'Enter' && e.target.id === 'desk-q') {
+    // jump to the only match so one more Enter hands it over
+    const rows = $$('#desk-main .qrow, #desk-main .rentrow');
+    if (rows.length === 1) rows[0].querySelector('.btn-ok, [data-act="return"]')?.focus();
+    e.preventDefault();
+    return;
+  }
   if (e.key !== 'Escape') return;
+  if (e.target.id === 'desk-q' && e.target.value) {
+    e.preventDefault();
+    e.target.value = '';
+    U.deskQ = '';
+    refreshDesk();
+    return;
+  }
   if (U.view === 'board') {
     ACT['board-exit']();
     return;

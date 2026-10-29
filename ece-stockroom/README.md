@@ -31,7 +31,8 @@ I wanted one place where a student can see exactly what their team has left to s
 
 ### For stockroom staff
 
-- **Front desk.** Requests waiting for pickup, oldest first. Mark a request purchased when the parts are handed over, or cancel it to put the money back in the team's budget. Rentals get checked back in from the same page.
+- **Front desk.** Requests waiting for pickup, oldest first. Mark a request purchased when the parts are handed over, or cancel it to put the money back in the team's budget. Rentals get checked back in and ready 3D prints handed over from the same page.
+- **Pickup search.** When there's a line at the desk, type whatever the student gives you: their name, eRaider username, team number (`7` or `team 7`) or order number. The list narrows as you type, finds a team's order even when a different teammate comes to pick it up, and stays ready for the next student after each handover. Press `/` to jump to the search and `Enter` to go straight to a single match.
 - **Inventory.** Add and edit products with photos, prices, rental fees, limits and stock. Hide items without losing their order history, manage categories, and import a whole inventory from a CSV file.
 - **Teams and instructors.** Every team's allocation, spending and members, grouped by course and instructor.
 - **Certificates.** Preview each upload, then verify or reject it.

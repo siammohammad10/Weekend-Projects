@@ -1,16 +1,174 @@
 // Staff views: front desk, teams, instructors and certificate review.
 
 // Admin: desk
+// Front desk search. Staff type whatever the student gives them: a name, an eRaider username,
+// a team number or an order number. Every word has to match somewhere in the pickup.
+// "team 7", "t7" or a bare 1–2 digit number means that team exactly. Other words are matched as text.
+function deskQuery() {
+  let team = null;
+  const text = String(U.deskQ || '')
+    .toLowerCase()
+    .replace(/\b(?:team|t)\s*0*(\d{1,3})\b/g, (_, n) => {
+      team = +n;
+      return ' ';
+    });
+  const terms = [];
+  for (const w of text.split(/\s+/).filter(Boolean)) {
+    if (team === null && /^\d{1,2}$/.test(w)) team = +w;
+    else terms.push(w);
+  }
+  return { team, terms, active: team !== null || terms.length > 0 };
+}
+const userOf = name => S.accounts.find(a => a.name === name)?.u || '';
+const teamNum = tid => parseInt(teamOf(tid).name.replace(/\D/g, ''), 10);
+function teamHay(tid) {
+  const t = teamOf(tid),
+    ins = inst(t.instructor);
+  return [t.project, ins.name, ins.course, ...t.members, ...t.members.map(userOf)];
+}
+function deskMatch(parts, tid, ctx) {
+  if (ctx.team !== null && teamNum(tid) !== ctx.team) return false;
+  const hay = parts.join(' ').toLowerCase();
+  return ctx.terms.every(term => hay.includes(term));
+}
+const hlTeam = (tid, ctx) =>
+  ctx.team !== null ? `<mark>${esc(teamOf(tid).name)}</mark>` : hl(teamOf(tid).name, ctx.terms);
+// When a teammate comes to pick up an order someone else placed, say who matched.
+function teammateHint(tid, by, terms) {
+  if (!terms.length) return '';
+  const m = teamOf(tid).members.find(
+    name => name !== by && terms.every(term => `${name} ${userOf(name)}`.toLowerCase().includes(term)),
+  );
+  return m ? `<span class="via">${I('user')} Teammate: ${esc(m)} (${userOf(m)})</span>` : '';
+}
+// Wrap the parts of a string that match the search in <mark>.
+function hl(raw, terms) {
+  const text = String(raw ?? '');
+  if (!terms.length) return esc(text);
+  const low = text.toLowerCase(),
+    marks = new Array(text.length).fill(false);
+  for (const term of terms) {
+    let at = low.indexOf(term);
+    while (at !== -1) {
+      for (let k = at; k < at + term.length; k++) marks[k] = true;
+      at = low.indexOf(term, at + term.length);
+    }
+  }
+  let out = '',
+    open = false;
+  for (let k = 0; k < text.length; k++) {
+    if (marks[k] !== open) {
+      out += marks[k] ? '<mark>' : '</mark>';
+      open = marks[k];
+    }
+    out += esc(text[k]);
+  }
+  return out + (open ? '</mark>' : '');
+}
+
+function deskMain() {
+  const ctx = deskQuery(),
+    terms = ctx.terms;
+  const waiting = S.orders.filter(o => o.status === 'requested').sort((a, z) => a.at - z.at);
+  const readyPrints = S.prints.filter(j => j.status === 'ready').sort((a, z) => a.readyAt - z.readyAt);
+  const out = rentLines()
+    .filter(r => r.o.status === 'purchased' && !r.l[4])
+    .sort((a, z) => a.o.doneAt - z.o.doneAt);
+  const q = waiting.filter(o =>
+    deskMatch(
+      [o.id, o.by, userOf(o.by), o.note, ...teamHay(o.team), ...o.items.map(l => item(l[0]).name)],
+      o.team,
+      ctx,
+    ),
+  );
+  const prints = readyPrints.filter(j => deskMatch([j.desc, ...teamHay(j.team)], j.team, ctx));
+  const rents = out.filter(({ o, l }) =>
+    deskMatch([o.id, o.by, userOf(o.by), item(l[0]).name, ...teamHay(o.team)], o.team, ctx),
+  );
+  const searching = ctx.active;
+  const nothing = searching && !q.length && !prints.length && !rents.length;
+  const count = (shown, total) => (searching ? `${shown} of ${total}` : `${total}`);
+
+  return `${
+    nothing
+      ? `<section class="panel rise"><div class="empty">${I('search')}<b>No pickups match “${esc(U.deskQ.trim())}”</b><span>Check the spelling, or try the team number (like 7) or the order number (like 1039).</span><button class="btn btn-sm btn-ghost" data-act="desk-clear">Clear search</button></div></section>`
+      : ''
+  }
+      <section class="panel rise" ${searching && !q.length ? 'hidden' : ''}>
+        <div class="panel-head"><div><div class="eyebrow">Oldest first</div><h2>Requests waiting for pickup</h2></div><span class="small muted">${count(q.length, waiting.length)} waiting</span></div>
+        ${
+          q.length
+            ? `<div class="qlist">${q
+                .map(o => {
+                  const t = teamOf(o.team),
+                    ins = inst(t.instructor);
+                  return `
+          <div class="qrow" data-row="${o.id}">
+            <div class="q-team"><span class="order-id">${hl(o.id, terms)}</span><b>${hlTeam(o.team, ctx)} · ${hl(o.by, terms)}</b><span>${hl(userOf(o.by), terms)} · ${esc(ins.course)} · ${rel(o.at)}</span>${teammateHint(o.team, o.by, terms)}</div>
+            <div class="q-items">${o.items.map(l => `<b>${l[1]}×</b> ${hl(item(l[0]).name, terms)}${lineMode(l) === 'rent' ? ' <span class="tag rent">Rent</span>' : ''}`).join(', ')}${o.note ? `<em class="q-note">“${esc(o.note)}”</em>` : ''}</div>
+            <div class="q-act"><span class="q-total">${money(orderTotal(o))}</span>
+              <button class="btn btn-sm btn-ghost" data-act="cancel" data-id="${o.id}">Cancel</button>
+              <button class="btn btn-sm btn-ok" data-act="mark" data-id="${o.id}">${I('check')} Mark purchased</button></div>
+          </div>`;
+                })
+                .join('')}</div>`
+            : `<div class="empty">${I('check')}<b>All caught up</b><span>New requests from teams show up here.</span></div>`
+        }
+      </section>
+      ${
+        prints.length
+          ? `<section class="panel rise">
+        <div class="panel-head"><div><div class="eyebrow">Also at the desk</div><h2>3D prints ready for pickup</h2></div><span class="small muted">${count(prints.length, readyPrints.length)} ready</span></div>
+        ${prints
+          .map(
+            j => `<div class="rentrow" data-row="job-${j.id}"><span class="line-art pthumb">${I('printer')}</span>
+            <div style="min-width:0"><b>${hlTeam(j.team, ctx)} · ${hl(j.desc, terms)}</b><span class="small">${esc(inst(teamOf(j.team).instructor).course)} · ready ${rel(j.readyAt)}</span>${teammateHint(j.team, null, terms)}</div>
+            <button class="btn btn-sm btn-ok" data-act="job-collect" data-id="${j.id}">${I('check')} Picked up</button></div>`,
+          )
+          .join('')}
+      </section>`
+          : ''
+      }
+      <section class="panel rise" ${searching && !rents.length ? 'hidden' : ''}>
+        <div class="panel-head"><div><div class="eyebrow">Due back by ${DUE}</div><h2>Out on rent</h2></div><span class="small muted">${count(rents.length, out.length)} rental${out.length === 1 ? '' : 's'}</span></div>
+        ${
+          rents.length
+            ? rents
+                .map(({ o, l, idx }) => {
+                  const it = item(l[0]),
+                    t = teamOf(o.team);
+                  return `
+          <div class="rentrow" data-row="rent-${o.id}-${idx}"><span class="line-art">${art(it)}</span>
+            <div style="min-width:0"><b>${l[1]} × ${hl(it.name, terms)}</b><span class="small">${hlTeam(o.team, ctx)} · ${hl(o.by, terms)} · picked up ${rel(o.doneAt)}</span>${teammateHint(o.team, o.by, terms)}</div>
+            <button class="btn btn-sm btn-ghost" data-act="return" data-id="${o.id}" data-idx="${idx}">${I('ret')} Mark returned</button></div>`;
+                })
+                .join('')
+            : '<p class="muted small">Nothing is out on rent right now.</p>'
+        }
+      </section>`;
+}
+function refreshDesk() {
+  const m = $('#desk-main');
+  if (!m) return;
+  m.classList.add('calm');
+  m.innerHTML = deskMain();
+}
+function focusDeskSearch(select) {
+  const el = $('#desk-q');
+  if (!el) return;
+  el.focus({ preventScroll: true });
+  if (select) el.select();
+}
+
 function vDesk() {
-  const q = S.orders.filter(o => o.status === 'requested').sort((a, z) => a.at - z.at);
+  const q = S.orders.filter(o => o.status === 'requested');
   const pc = S.certs.filter(c => c.status === 'pending').length;
   const low = shelf()
     .filter(i => S.stock[i.sku] <= 8)
     .sort((a, z) => S.stock[a.sku] - S.stock[z.sku]);
-  const out = rentLines()
+  const outUnits = rentLines()
     .filter(r => r.o.status === 'purchased' && !r.l[4])
-    .sort((a, z) => a.o.doneAt - z.o.doneAt);
-  const outUnits = out.reduce((s, r) => s + r.l[1], 0);
+    .reduce((s, r) => s + r.l[1], 0);
   const recent = S.orders
     .filter(o => o.status === 'purchased')
     .sort((a, z) => z.doneAt - a.doneAt)
@@ -24,47 +182,12 @@ function vDesk() {
     <article class="panel kpi rise" style="--i:3"><div class="eyebrow">Certificates to review</div><b>${countSpan(pc)}</b><span>lab access requests</span></article>
     <article class="panel kpi rise" style="--i:4"><div class="eyebrow">Low stock</div><b>${countSpan(low.length)}</b><span>items at 8 or fewer</span></article>
   </div>
+  <div class="desk-search rise" style="--i:5">
+    <label class="search">${I('search')}<input id="desk-q" type="search" placeholder="Find a pickup by student, eRaider, team or order number" value="${esc(U.deskQ || '')}" autocomplete="off" spellcheck="false" aria-label="Find a pickup"></label>
+    <span class="desk-hint" aria-hidden="true">Press <kbd>/</kbd> to search, <kbd>Enter</kbd> to jump to a single match</span>
+  </div>
   <div class="desk">
-    <div class="main-col">
-      <section class="panel rise" style="--i:5">
-        <div class="panel-head"><div><div class="eyebrow">Oldest first</div><h2>Requests waiting for pickup</h2></div></div>
-        ${
-          q.length
-            ? `<div class="qlist">${q
-                .map(o => {
-                  const t = teamOf(o.team),
-                    ins = inst(t.instructor);
-                  return `
-          <div class="qrow" data-row="${o.id}">
-            <div class="q-team"><span class="order-id">${o.id}</span><b>${t.name} · ${esc(o.by)}</b><span>${esc(ins.name)} · ${rel(o.at)}</span></div>
-            <div class="q-items">${o.items.map(l => `<b>${l[1]}×</b> ${esc(item(l[0]).name)}${lineMode(l) === 'rent' ? ' <span class="tag rent">Rent</span>' : ''}`).join(', ')}${o.note ? `<em class="q-note">“${esc(o.note)}”</em>` : ''}</div>
-            <div class="q-act"><span class="q-total">${money(orderTotal(o))}</span>
-              <button class="btn btn-sm btn-ghost" data-act="cancel" data-id="${o.id}">Cancel</button>
-              <button class="btn btn-sm btn-ok" data-act="mark" data-id="${o.id}">${I('check')} Mark purchased</button></div>
-          </div>`;
-                })
-                .join('')}</div>`
-            : `<div class="empty">${I('check')}<b>All caught up</b><span>New requests from teams show up here.</span></div>`
-        }
-      </section>
-      <section class="panel rise" style="--i:6">
-        <div class="panel-head"><div><div class="eyebrow">Due back by ${DUE}</div><h2>Out on rent</h2></div><span class="small muted">${out.length} rental${out.length === 1 ? '' : 's'}</span></div>
-        ${
-          out.length
-            ? out
-                .map(({ o, l, idx }) => {
-                  const it = item(l[0]),
-                    t = teamOf(o.team);
-                  return `
-          <div class="rentrow" data-row="rent-${o.id}-${idx}"><span class="line-art">${art(it)}</span>
-            <div style="min-width:0"><b>${l[1]} × ${esc(it.name)}</b><span class="small">${t.name} · ${esc(o.by)} · picked up ${rel(o.doneAt)}</span></div>
-            <button class="btn btn-sm btn-ghost" data-act="return" data-id="${o.id}" data-idx="${idx}">${I('ret')} Mark returned</button></div>`;
-                })
-                .join('')
-            : '<p class="muted small">Nothing is out on rent right now.</p>'
-        }
-      </section>
-    </div>
+    <div class="main-col" id="desk-main">${deskMain()}</div>
     <div class="side">
       <section class="panel rise" style="--i:7">
         <div class="panel-head"><div><div class="eyebrow">Reorder soon</div><h2>Low stock</h2></div><button class="linkbtn" data-act="nav" data-v="inv">Inventory</button></div>

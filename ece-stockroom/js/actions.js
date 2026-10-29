@@ -178,6 +178,7 @@ const ACT = {
       o.doneAt = Date.now();
       save();
       render();
+      if (U.deskQ) focusDeskSearch(true);
       toast(`${id} marked purchased · ${teamOf(o.team).name}`);
     });
   },
@@ -190,6 +191,7 @@ const ACT = {
       o.items.forEach(([s, q]) => (S.stock[s] += q));
       save();
       render();
+      if (U.deskQ) focusDeskSearch(true);
       toast(`${id} cancelled. ${money(orderTotal(o))} returned to ${teamOf(o.team).name}.`);
     });
   },
@@ -202,6 +204,7 @@ const ACT = {
       S.stock[l[0]] += l[1];
       save();
       render();
+      if (U.deskQ) focusDeskSearch(true);
       toast(`${item(l[0]).name} checked back in from ${teamOf(o.team).name}`);
     });
   },
@@ -303,6 +306,13 @@ const ACT = {
       fallback();
     }
   },
+  'desk-clear': () => {
+    U.deskQ = '';
+    const el = $('#desk-q');
+    if (el) el.value = '';
+    refreshDesk();
+    focusDeskSearch();
+  },
   'board-open': () => {
     U.view = 'board';
     U.boardCalm = false;
@@ -356,6 +366,7 @@ const ACT = {
       j.collectedAt = Date.now();
       save();
       render();
+      if (U.deskQ && U.view === 'desk') focusDeskSearch(true);
       toast(`${teamOf(j.team).name} picked up their print`);
     });
   },

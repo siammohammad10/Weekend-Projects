@@ -2861,6 +2861,78 @@ button.lowrow:hover {
 }
 
 /* ---------- admin ---------- */
+.desk-search {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+.desk-search .search {
+  flex: 1 1 320px;
+}
+.desk-search .search input {
+  height: 54px;
+  font-size: 17px;
+  border-radius: 14px;
+  padding-left: 46px;
+  background: var(--surface);
+}
+.desk-search .search .i {
+  top: 18px;
+  left: 16px;
+}
+.desk-hint {
+  font-size: 13px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+kbd {
+  display: inline-block;
+  min-width: 20px;
+  padding: 1px 6px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  border-bottom-width: 2px;
+  background: var(--surface);
+  font: 600 12px/1.4 var(--mono);
+  color: var(--ink);
+  text-align: center;
+}
+@media (pointer: coarse) {
+  .desk-hint {
+    display: none;
+  }
+}
+mark {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-radius: 3px;
+  padding: 0 1px;
+}
+.via {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 4px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ok);
+}
+@media (max-width: 640px) {
+  .rentrow {
+    grid-template-columns: 44px minmax(0, 1fr);
+  }
+  .rentrow > .btn {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+}
+.via .i {
+  width: 14px;
+  height: 14px;
+}
+
 .jlist {
   display: grid;
 }
