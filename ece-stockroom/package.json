@@ -1,0 +1,16 @@
+{
+  "name": "ece-stockroom",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Web app for the Texas Tech ECE stockroom: parts, rentals, team budgets, lab access and 3D printing.",
+  "author": "Mohammad Siam",
+  "license": "MIT",
+  "scripts": {
+    "start": "npx serve@14.2.4 .",
+    "format": "prettier --write .",
+    "check": "prettier --check ."
+  },
+  "devDependencies": {
+    "prettier": "3.3.3"
+  }
+}

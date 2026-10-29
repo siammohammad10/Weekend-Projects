@@ -1,0 +1,13 @@
+sku,name,category,price,rent,mode,stock,limit,limit_per,description
+SEN-BME280,BME280 environmental sensor,Sensors,6.50,,buy,20,2,term,"Temperature, humidity and pressure over I2C."
+SEN-VL53L0X,VL53L0X laser distance sensor,Sensors,7.25,,buy,15,2,term,Time-of-flight ranging up to 2 m.
+DSP-OLED096,"0.96"" OLED display, 128x64",Displays,5.75,,buy,18,3,term,"Small I2C screen for status readouts. Runs on 3.3 V or 5 V."
+DSP-LCD1602,16x2 character LCD with I2C backpack,Displays,4.20,,buy,22,,,Two-line text display that needs only SDA and SCL.
+MCU-STM32-BP,STM32F411 Black Pill,Microcontrollers,9.80,0,both,12,2,course,Cortex-M4 board at 100 MHz. Rent one for lab exercises or buy one for your build.
+MOT-28BYJ,28BYJ-48 stepper with ULN2003 driver,Motors,3.40,,buy,30,4,term,Geared 5 V stepper that comes with its own driver board.
+PRO-HEADER-40,Breakaway header pins (10 strips),Prototyping,1.50,,buy,50,,,40-pin 2.54 mm male headers.
+EQ-SCOPE-2CH,Handheld oscilloscope (2 channel),Lab equipment,,10.00,rent,3,,,50 MHz scope for bench checks. Return it with both probes.
+EQ-HOTAIR,Hot air rework station,Lab equipment,,,rent,2,,,For SMD rework. Ask the desk for a quick safety walkthrough first.
+EQ-CALIPER,Digital caliper,Lab equipment,,0,rent,6,,,0 to 150 mm. Free to borrow.
+MOT-TT-48,,,2.75,,,60,,,
+SEN-MPU6050,,,,,,12,1,term,

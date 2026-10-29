@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta
+      name="description"
+      content="Order parts, rent lab equipment, track team budgets and manage the ECE stockroom at Texas Tech."
+    />
+    <meta name="theme-color" content="#000000" />
+    <title>ECE Stockroom</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@500&display=swap"
+    />
+    <link rel="stylesheet" href="css/styles.css" />
+    <script src="js/config.js" defer></script>
+    <script src="js/utils.js" defer></script>
+    <script src="js/icons.js" defer></script>
+    <script src="js/illustrations.js" defer></script>
+    <script src="js/catalog.js" defer></script>
+    <script src="js/store.js" defer></script>
+    <script src="js/views/login.js" defer></script>
+    <script src="js/views/nav.js" defer></script>
+    <script src="js/views/dashboard.js" defer></script>
+    <script src="js/views/stock.js" defer></script>
+    <script src="js/views/profile.js" defer></script>
+    <script src="js/views/staff.js" defer></script>
+    <script src="js/views/printing.js" defer></script>
+    <script src="js/views/inventory.js" defer></script>
+    <script src="js/app.js" defer></script>
+    <script src="js/actions.js" defer></script>
+    <script src="js/main.js" defer></script>
+  </head>
+  <body>
+    <noscript><p class="noscript">ECE Stockroom needs JavaScript turned on.</p></noscript>
+    <header class="top" id="top" hidden>
+      <div class="top-in">
+        <button class="brand" data-act="home" aria-label="ECE Stockroom home">
+          <svg viewBox="0 0 28 28" aria-hidden="true">
+            <rect x="1" y="1" width="26" height="26" rx="7" style="fill: var(--accent)" />
+            <rect x="7" y="9" width="14" height="6" rx="1.5" fill="#ffffff" />
+            <rect x="10" y="18.5" width="8" height="2.5" rx="1.25" fill="#ffffff" opacity=".7" />
+          </svg>
+          <span>ECE Stockroom</span>
+        </button>
+        <nav class="nav" id="nav" aria-label="Main"></nav>
+        <div class="top-right">
+          <button class="icon-btn" id="cart-btn" data-act="cart-open" aria-label="Open cart"></button>
+          <button class="icon-btn" data-act="signout" aria-label="Sign out" title="Sign out">
+            <svg
+              class="i"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3" />
+              <path d="M10 17l-5-5 5-5" />
+              <path d="M5 12h11" />
+            </svg>
+          </button>
+          <button
+            class="me-btn"
+            id="me-btn"
+            data-act="nav"
+            data-v="profile"
+            aria-label="Your profile"
+          ></button>
+        </div>
+      </div>
+    </header>
+    <main class="wrap" id="view"></main>
+    <div class="overlay" id="sheet-root" hidden></div>
+    <div class="drawer-root" id="drawer-root" hidden></div>
+    <div class="toasts" id="toasts" aria-live="polite"></div>
+  </body>
+</html>

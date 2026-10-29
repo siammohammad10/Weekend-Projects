@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Weekend projects · Mohammad Siam</title>
+    <meta name="description" content="Things Mohammad Siam builds on weekends." />
+    <link rel="icon" href="ece-stockroom/favicon.svg" type="image/svg+xml" />
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #f5f5f7;
+        --card: #ffffff;
+        --ink: #1d1d1f;
+        --muted: #6e6e73;
+        --accent: #cc0000;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #000000;
+          --card: #1c1c1e;
+          --ink: #f5f5f7;
+          --muted: #a1a1a6;
+          --accent: #ff3b3b;
+        }
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font: 17px/1.5 -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        letter-spacing: -0.011em;
+      }
+      main { max-width: 760px; margin: 0 auto; padding: 72px 22px 56px; }
+      h1 { font-size: clamp(40px, 8vw, 60px); line-height: 1.04; letter-spacing: -0.045em; margin: 0; }
+      .lead { color: var(--muted); font-size: 20px; margin: 14px 0 40px; max-width: 34ch; }
+      .card {
+        display: block;
+        background: var(--card);
+        border-radius: 24px;
+        padding: 26px 26px 22px;
+        color: inherit;
+        text-decoration: none;
+        transition: transform 0.4s cubic-bezier(0.25, 1, 0.3, 1), box-shadow 0.4s;
+      }
+      .card:hover { transform: translateY(-3px); box-shadow: 0 18px 40px rgba(0, 0, 0, 0.1); }
+      .tag { color: var(--accent); font-size: 14px; font-weight: 600; }
+      .card h2 { margin: 4px 0 6px; font-size: 28px; letter-spacing: -0.03em; }
+      .card p { margin: 0; color: var(--muted); }
+      .links { display: flex; gap: 18px; margin-top: 16px; font-weight: 500; }
+      .links a { color: var(--accent); text-decoration: none; }
+      .links a:hover { text-decoration: underline; }
+      footer { margin-top: 48px; color: var(--muted); font-size: 14px; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Weekend projects</h1>
+      <p class="lead">Things I build on weekends, mostly tools for problems I run into at school.</p>
+      <article class="card">
+        <span class="tag">Web app · Texas Tech ECE</span>
+        <h2>ECE Stockroom</h2>
+        <p>Students order and rent parts against their team’s budget. Staff run the front desk, inventory, lab access and the 3D print queue.</p>
+        <div class="links">
+          <a href="ece-stockroom/">Open the demo</a>
+          <a href="https://github.com/siammohammad10/Weekend-Projects/tree/main/ece-stockroom">Code</a>
+        </div>
+      </article>
+      <footer>Mohammad Siam · Electrical Engineering, Texas Tech University</footer>
+    </main>
+  </body>
+</html>
