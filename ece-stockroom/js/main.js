@@ -157,4 +157,12 @@ addEventListener('storage', e => {
   } catch (err) {}
 });
 
+// Startup: draw the current screen without touching history, then follow the URL if it
+// points somewhere (a refresh or a shared link) and mark this as the app's first entry.
+Router.restoring = true;
 render();
+Router.restoring = false;
+if (S.me) {
+  if (location.hash) applyRoute();
+  history.replaceState({ app: true, overlay: false, root: true }, '', routeHash());
+}

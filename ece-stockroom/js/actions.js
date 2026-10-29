@@ -30,16 +30,20 @@ const ACT = {
     if (S.me) go(S.role === 'student' ? 'dash' : 'desk');
   },
   nav: t => {
-    closeOverlay('#drawer-root');
+    closeOverlay('#drawer-root', { replace: true });
     go(t.dataset.v);
   },
   'demo-login': t => login(t.dataset.u),
   signout: () => {
-    closeOverlay('#drawer-root');
-    closeOverlay('#sheet-root');
+    closeOverlay('#drawer-root', { replace: true });
+    closeOverlay('#sheet-root', { replace: true });
     const u = S.session;
     S.session = null;
     save();
+    leaveBoard();
+    U.overlay = null;
+    Router.replaceNext = false;
+    history.replaceState(null, '', location.pathname + location.search);
     renderHeader();
     $('#view').innerHTML = '';
     showGate(true);
@@ -53,6 +57,7 @@ const ACT = {
     if (q) q.value = '';
     $('#stock-body').innerHTML = stockBody();
     post($('#stock-body'));
+    syncRoute();
     scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
   },
   open: t => openSheet(t.dataset.sku),
@@ -89,7 +94,7 @@ const ACT = {
   'cart-open': () => openDrawer(),
   'cart-close': () => closeOverlay('#drawer-root'),
   'go-stock': () => {
-    closeOverlay('#drawer-root');
+    closeOverlay('#drawer-root', { replace: true });
     go('stock');
   },
   'cart-inc': t => {
@@ -155,7 +160,7 @@ const ACT = {
     lines.forEach(l => (S.stock[l.it.sku] -= l.q));
     S.carts[S.session] = {};
     save();
-    closeOverlay('#drawer-root');
+    closeOverlay('#drawer-root', { replace: true });
     U.flash = id;
     U.view = 'dash';
     render();
@@ -263,7 +268,7 @@ const ACT = {
       v = parseInt(el.value, 10) || 0;
     el.value = Math.max(0, Math.min(9999, v + +t.dataset.d));
   },
-  'cats-open': () => openFormSheet(catsHTML()),
+  'cats-open': () => openCats(),
   'cat-del': t => {
     const row = t.closest('.cat-edit');
     if (reduce) {
@@ -318,10 +323,11 @@ const ACT = {
     }, 20000);
   },
   'board-exit': () => {
-    clearInterval(U.boardTimer);
-    try {
-      if (document.fullscreenElement) document.exitFullscreen?.().catch?.(() => {});
-    } catch (e) {}
+    if (history.state && history.state.app && !history.state.root && location.hash.startsWith('#board')) {
+      history.back();
+      return;
+    }
+    leaveBoard();
     U.view = 'print';
     render();
     scrollTo({ top: 0 });
@@ -406,8 +412,8 @@ const ACT = {
       U.cat = null;
       U.q = '';
       U.instF = null;
-      closeOverlay('#drawer-root');
-      closeOverlay('#sheet-root');
+      closeOverlay('#drawer-root', { replace: true });
+      closeOverlay('#sheet-root', { replace: true });
       render();
       scrollTo({ top: 0 });
       toast('Demo data reset');

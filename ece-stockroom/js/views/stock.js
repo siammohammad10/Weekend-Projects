@@ -124,6 +124,8 @@ function openSheet(sku) {
   void root.offsetWidth;
   root.classList.add('open');
   $('.close', root).focus({ preventScroll: true });
+  U.overlay = { k: 'item', v: sku };
+  syncRoute();
 }
 function refreshSheet() {
   const root = $('#sheet-root');
@@ -134,7 +136,7 @@ function refreshSheet() {
   const back = focusAct && $(`#sheet-info [data-act="${focusAct}"]${focusM ? `[data-m="${focusM}"]` : ''}`);
   if (back && !back.disabled) back.focus({ preventScroll: true });
 }
-function closeOverlay(id) {
+function closeOverlay(id, opts = {}) {
   const root = $(id);
   if (root.hidden) return;
   root.classList.remove('open');
@@ -148,6 +150,7 @@ function closeOverlay(id) {
     reduce ? 0 : 380,
   );
   if (id === '#sheet-root') U.sheetSku = null;
+  routeOverlayClosed(opts);
   if (U.lastFocus && document.contains(U.lastFocus)) U.lastFocus.focus({ preventScroll: true });
 }
 
@@ -204,6 +207,8 @@ function openDrawer() {
   void root.offsetWidth;
   root.classList.add('open');
   $('.close', root).focus({ preventScroll: true });
+  U.overlay = { k: 'cart' };
+  syncRoute();
 }
 function refreshDrawer() {
   const root = $('#drawer-root');

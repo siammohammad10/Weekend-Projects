@@ -163,6 +163,8 @@ function openEditor(sku) {
   U.edPhoto = it ? it.photo || null : null;
   openFormSheet(editorHTML(it), it ? '#ed-stock' : '#ed-name');
   edSync();
+  U.overlay = { k: 'edit', v: sku || 'new' };
+  syncRoute();
 }
 function edSync() {
   const f = $('#ed-form');
@@ -534,6 +536,13 @@ function importHTML() {
 function openImport() {
   U.csvPlan = null;
   openFormSheet(importHTML());
+  U.overlay = { k: 'import' };
+  syncRoute();
+}
+function openCats() {
+  openFormSheet(catsHTML());
+  U.overlay = { k: 'cats' };
+  syncRoute();
 }
 function refreshImport() {
   const b = $('#form-body');

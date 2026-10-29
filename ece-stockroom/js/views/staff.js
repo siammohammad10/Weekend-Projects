@@ -185,4 +185,6 @@ function openViewer(id) {
   void root.offsetWidth;
   root.classList.add('open');
   $('.close', root).focus({ preventScroll: true });
+  U.overlay = { k: 'cert', v: id };
+  syncRoute();
 }

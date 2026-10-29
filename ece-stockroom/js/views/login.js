@@ -258,6 +258,7 @@ function login(raw) {
   if (err) err.hidden = true;
   S.session = a.u;
   save();
+  Router.replaceNext = true;
   U.view = a.role === 'admin' ? 'desk' : 'dash';
   U.cat = null;
   U.q = '';

@@ -133,6 +133,7 @@ Weekend-Projects/ece-stockroom/
 │   │   ├── printing.js       3D print queue and pickup board
 │   │   └── inventory.js      Product editor, categories, CSV import
 │   ├── app.js                Rendering, effects and file handling
+│   ├── router.js             Browser history: back and forward, refresh, links to a page
 │   ├── actions.js            Button actions
 │   └── main.js               Event wiring and startup
 ├── samples/

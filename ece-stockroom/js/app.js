@@ -22,11 +22,19 @@ function render() {
   renderHeader();
   if (board) {
     $('#view').innerHTML = vBoard();
+    syncRoute();
     return;
   }
   $('#view').innerHTML = set[U.view]() + footer();
   post($('#view'));
   U.flash = null;
+  syncRoute();
+}
+function leaveBoard() {
+  clearInterval(U.boardTimer);
+  try {
+    if (document.fullscreenElement) document.exitFullscreen?.().catch?.(() => {});
+  } catch (e) {}
 }
 function post(root) {
   countUps(root);
