@@ -41,6 +41,9 @@
   --mono: 'SF Mono', 'Geist Mono', ui-monospace, Menlo, Consolas, monospace;
   --ease: cubic-bezier(0.25, 1, 0.3, 1);
   --spring: cubic-bezier(0.32, 0.72, 0, 1);
+  /* Pages use the full window width, with the gutter growing on bigger screens. */
+  --page-max: 2200px;
+  --gutter: clamp(22px, 4vw, 72px);
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
@@ -541,14 +544,14 @@ p {
   backdrop-filter: saturate(1.8) blur(20px);
 }
 .top-in {
-  max-width: 1080px;
+  max-width: var(--page-max);
   margin: 0 auto;
   height: 56px;
   display: flex;
   align-items: center;
   gap: 16px;
-  padding-left: max(22px, env(safe-area-inset-left, 0px));
-  padding-right: max(22px, env(safe-area-inset-right, 0px));
+  padding-left: max(var(--gutter), env(safe-area-inset-left, 0px));
+  padding-right: max(var(--gutter), env(safe-area-inset-right, 0px));
 }
 .brand {
   display: flex;
@@ -718,11 +721,11 @@ p {
 
 /* ---------- page ---------- */
 .wrap {
-  max-width: 1080px;
+  max-width: var(--page-max);
   margin: 0 auto;
   padding-block: 52px 80px;
-  padding-left: max(22px, env(safe-area-inset-left, 0px));
-  padding-right: max(22px, env(safe-area-inset-right, 0px));
+  padding-left: max(var(--gutter), env(safe-area-inset-left, 0px));
+  padding-right: max(var(--gutter), env(safe-area-inset-right, 0px));
 }
 .page-head {
   display: flex;
@@ -1290,7 +1293,7 @@ table.lines .tag {
 }
 .tiles {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 440px), 1fr));
   gap: 18px;
 }
 .tile-cat {
@@ -3697,7 +3700,7 @@ body.board-mode .wrap {
 }
 .teams {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 330px), 1fr));
   gap: 18px;
 }
 .team {
@@ -3707,6 +3710,10 @@ body.board-mode .wrap {
 }
 .team .panel-head {
   margin-bottom: 0;
+  flex-wrap: nowrap;
+}
+.team .panel-head > div:first-child {
+  min-width: 0;
 }
 .left-big {
   text-align: right;
@@ -3747,7 +3754,8 @@ body.board-mode .wrap {
   align-items: center;
   gap: 6px;
 }
-.stack-legend .team-foot {
+.team-foot {
+  margin-top: auto;
   display: flex;
   justify-content: space-between;
   align-items: center;
