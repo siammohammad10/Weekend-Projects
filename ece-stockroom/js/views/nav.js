@@ -37,6 +37,7 @@ function renderHeader() {
     if (b.dataset.v === U.view) b.setAttribute('aria-current', 'page');
     else b.removeAttribute('aria-current');
   });
+  moveNavPill();
   const badges = {
     desk: S.orders.filter(o => o.status === 'requested').length,
     certs: S.certs.filter(c => c.status === 'pending').length,

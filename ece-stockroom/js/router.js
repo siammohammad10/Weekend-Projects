@@ -77,7 +77,7 @@ function openRouteOverlay(o) {
 }
 
 // Bring the screen in line with the URL, after back/forward or on first load.
-function applyRoute() {
+function applyRoute(opts = {}) {
   if (!S.me) return;
   const r = parseRoute(location.hash);
   const set = VIEWS[S.role];
@@ -93,14 +93,21 @@ function applyRoute() {
     }
     const changed = view !== U.view || (view === 'stock' && cat !== (U.cat || null));
     if (changed) {
-      if (U.view === 'board' && view !== 'board') leaveBoard();
-      U.view = view;
-      if (view === 'stock') {
-        U.cat = cat;
-        U.q = '';
-      }
-      render();
-      scrollTo({ top: 0 });
+      const leavingBoard = U.view === 'board' && view !== 'board';
+      if (leavingBoard) leaveBoard();
+      const kind =
+        opts.motion && !leavingBoard && view !== 'board'
+          ? motionKind({ view: U.view, cat: U.cat }, { view, cat })
+          : null;
+      pageMotion(kind, () => {
+        U.view = view;
+        if (view === 'stock') {
+          U.cat = cat;
+          U.q = '';
+        }
+        render();
+        scrollTo({ top: 0 });
+      });
     }
     if (r.overlay && !sameOverlay(U.overlay, r.overlay)) openRouteOverlay(r.overlay);
   } finally {
@@ -112,7 +119,8 @@ function applyRoute() {
   }
 }
 
-addEventListener('popstate', () => {
+// When the browser already animated the change itself (a swipe back on iPhone), don't animate again.
+addEventListener('popstate', e => {
   Router.expectPop = false;
-  applyRoute();
+  applyRoute({ motion: !e.hasUAVisualTransition });
 });

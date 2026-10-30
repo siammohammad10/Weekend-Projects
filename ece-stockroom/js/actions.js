@@ -51,14 +51,18 @@ const ACT = {
     toast(`Signed out of ${u}`);
   },
   cat: t => {
-    U.cat = t.dataset.id || null;
-    U.q = '';
-    const q = $('#q');
-    if (q) q.value = '';
-    $('#stock-body').innerHTML = stockBody();
-    post($('#stock-body'));
-    syncRoute();
-    scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
+    const to = t.dataset.id || null;
+    const kind = U.q ? 'fade' : motionKind({ view: 'stock', cat: U.cat }, { view: 'stock', cat: to });
+    pageMotion(kind, () => {
+      U.cat = to;
+      U.q = '';
+      const q = $('#q');
+      if (q) q.value = '';
+      $('#stock-body').innerHTML = stockBody();
+      post($('#stock-body'));
+      syncRoute();
+    });
+    scrollTo({ top: 0, behavior: reduce || kind ? 'auto' : 'smooth' });
   },
   open: t => openSheet(t.dataset.sku),
   quick: t => {

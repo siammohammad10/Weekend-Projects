@@ -52,7 +52,7 @@ The 3D print pickup board, meant for a monitor at the desk:
 
 ![3D print queue screen](docs/screenshots/print-queue-screen.png)
 
-On phones the navigation moves to a tab bar at the bottom:
+On phones the navigation moves to a tab bar at the bottom. Pages slide in and out the way they do on an iPhone, and the product page and cart open as sheets you can swipe down to close:
 
 ![Phone layouts](docs/screenshots/mobile.png)
 
@@ -134,6 +134,7 @@ Weekend-Projects/ece-stockroom/
 │   │   ├── printing.js       3D print queue and pickup board
 │   │   └── inventory.js      Product editor, categories, CSV import
 │   ├── app.js                Rendering, effects and file handling
+│   ├── motion.js             Page transitions, sheet swipe-to-close
 │   ├── router.js             Browser history: back and forward, refresh, links to a page
 │   ├── actions.js            Button actions
 │   └── main.js               Event wiring and startup
@@ -215,7 +216,7 @@ The records the app works with, and how the budget math works, are described in 
 
 ## Browser support
 
-Current versions of Chrome, Edge, Safari and Firefox, on desktop and mobile. Light and dark mode follow the device setting.
+Current versions of Chrome, Edge, Safari and Firefox, on desktop and mobile. Light and dark mode follow the device setting. Animations turn off when the device is set to reduce motion.
 
 ## Author
 

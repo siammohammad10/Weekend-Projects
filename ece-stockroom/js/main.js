@@ -183,6 +183,7 @@ addEventListener('storage', e => {
 
 // Startup: draw the current screen without touching history, then follow the URL if it
 // points somewhere (a refresh or a shared link) and mark this as the app's first entry.
+initMotion();
 Router.restoring = true;
 render();
 Router.restoring = false;

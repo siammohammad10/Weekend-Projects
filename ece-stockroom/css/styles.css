@@ -40,6 +40,7 @@
     sans-serif;
   --mono: 'SF Mono', 'Geist Mono', ui-monospace, Menlo, Consolas, monospace;
   --ease: cubic-bezier(0.25, 1, 0.3, 1);
+  --spring: cubic-bezier(0.32, 0.72, 0, 1);
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
@@ -572,6 +573,7 @@ p {
   transform: rotate(-8deg) scale(1.06);
 }
 .nav {
+  position: relative;
   display: flex;
   gap: 2px;
   margin: 0 auto;
@@ -608,6 +610,26 @@ p {
 .nav-btn[aria-current='page'] {
   color: var(--ink);
   background: var(--chip);
+}
+.nav-pill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  border-radius: 980px;
+  background: var(--chip);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    transform 0.5s var(--spring),
+    width 0.5s var(--spring),
+    opacity 0.2s;
+}
+.nav-pill.on {
+  opacity: 1;
+}
+.nav:has(.nav-pill.on) .nav-btn[aria-current='page'] {
+  background: none;
 }
 .badge {
   min-width: 18px;
@@ -1544,15 +1566,16 @@ table.lines .tag {
   box-shadow: 0 40px 100px rgba(0, 0, 0, 0.28);
   display: grid;
   grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
-  transform: translateY(30px) scale(0.97);
+  transform: translateY(24px) scale(0.96);
   opacity: 0;
   transition:
-    transform 0.6s var(--ease),
-    opacity 0.3s;
+    transform 0.38s var(--spring),
+    opacity 0.25s;
 }
 .open .sheet {
   transform: none;
   opacity: 1;
+  transition-duration: 0.56s, 0.3s;
 }
 .sheet-art {
   background: var(--surface-2);
@@ -1837,13 +1860,88 @@ table.lines .tag {
   flex-direction: column;
   box-shadow: -20px 0 60px rgba(0, 0, 0, 0.18);
   transform: translateX(105%);
-  transition: transform 0.6s var(--ease);
+  transition: transform 0.38s var(--spring);
   padding-top: env(safe-area-inset-top, 0px);
   padding-bottom: env(safe-area-inset-bottom, 0px);
   padding-right: env(safe-area-inset-right, 0px);
 }
 .open .drawer {
   transform: none;
+  transition-duration: 0.56s;
+}
+/* Cards give a little under the finger, like on iOS. */
+.tile-cat:active,
+.item:active:not(:has(button:active)) {
+  transform: scale(0.98);
+  transition-duration: 0.15s;
+}
+
+/* ---------- motion: page push and pop, sheets ---------- */
+.in-motion {
+  overflow-x: clip;
+}
+.page-ghost {
+  position: fixed;
+  z-index: 20;
+  margin: 0;
+  overflow: hidden;
+  background: var(--bg);
+  pointer-events: none;
+}
+.page-ghost.over {
+  z-index: 22;
+}
+#view.moving,
+#view.under {
+  position: relative;
+  background: var(--bg);
+}
+#view.moving {
+  z-index: 21;
+}
+#view.moving,
+.page-ghost.moving {
+  box-shadow: -14px 0 40px rgba(0, 0, 0, 0.12);
+}
+/* The page behind an open sheet settles back. */
+#view {
+  transition: transform 0.56s var(--spring);
+}
+.behind #view {
+  transform: scale(0.975);
+}
+@media (max-width: 760px) {
+  .behind #view {
+    transform: scale(0.93) translateY(6px);
+  }
+  .sheet:not(.form-sheet)::before,
+  .drawer::before {
+    content: '';
+    position: absolute;
+    z-index: 3;
+    top: 7px;
+    left: 50%;
+    width: 36px;
+    height: 5px;
+    margin-left: -18px;
+    border-radius: 3px;
+    background: var(--muted);
+    opacity: 0.4;
+  }
+  .drawer {
+    top: auto;
+    left: 0;
+    width: 100%;
+    height: auto;
+    max-height: calc(100% - 44px - env(safe-area-inset-top, 0px));
+    border-radius: 26px 26px 0 0;
+    box-shadow: 0 -20px 60px rgba(0, 0, 0, 0.18);
+    transform: translateY(100%);
+    padding-right: 0;
+  }
+  .drawer-body {
+    min-height: 0;
+  }
 }
 .drawer-head {
   padding: 26px 24px 16px;
@@ -3988,6 +4086,15 @@ body.board-mode .wrap {
   }
   .nav-btn[aria-current='page'] {
     color: var(--accent);
+  }
+  .nav-pill {
+    display: none;
+  }
+  .nav-btn .i {
+    transition: transform 0.35s var(--spring);
+  }
+  .nav-btn:active .i {
+    transform: scale(0.84);
   }
   .nav-btn .badge {
     position: absolute;

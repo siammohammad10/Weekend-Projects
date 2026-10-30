@@ -44,9 +44,11 @@ function go(view) {
     scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
     return;
   }
-  U.view = view;
-  render();
-  scrollTo({ top: 0 });
+  pageMotion(U.view === 'board' ? null : 'fade', () => {
+    U.view = view;
+    render();
+    scrollTo({ top: 0 });
+  });
 }
 function countUps(root) {
   if (reduce) return;
