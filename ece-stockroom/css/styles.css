@@ -1906,7 +1906,15 @@ table.lines .tag {
 .page-ghost.moving {
   box-shadow: -14px 0 40px rgba(0, 0, 0, 0.12);
 }
-/* The page behind an open sheet settles back. */
+/* The page behind an open sheet settles back and can't be scrolled. */
+html.locked {
+  overflow: hidden;
+}
+.sheet,
+.drawer-body,
+#form-body {
+  overscroll-behavior: contain;
+}
 #view {
   transition: transform 0.56s var(--spring);
 }

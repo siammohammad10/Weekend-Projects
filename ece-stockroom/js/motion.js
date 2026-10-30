@@ -134,16 +134,22 @@ function motionKind(from, to) {
   return 'fade';
 }
 
-// The page behind an open sheet settles back, scaled around the middle of the screen.
+// The page behind an open sheet settles back, scaled around the middle of the screen, and stays put
+// while the sheet is open.
 function watchOverlays() {
   const roots = [$('#sheet-root'), $('#drawer-root')];
   const sync = () => {
     const open = roots.some(r => r.classList.contains('open'));
-    if (open && !document.body.classList.contains('behind')) {
+    const body = document.body;
+    if (open === body.classList.contains('behind')) return;
+    if (open) {
       const view = $('#view');
       view.style.transformOrigin = `50% ${Math.round(innerHeight / 2 - view.getBoundingClientRect().top)}px`;
-    }
-    document.body.classList.toggle('behind', open);
+      // Stop the page behind from scrolling. Pad by the scrollbar's width so nothing shifts when it hides.
+      body.style.paddingRight = innerWidth - document.documentElement.clientWidth + 'px';
+    } else body.style.paddingRight = '';
+    document.documentElement.classList.toggle('locked', open);
+    body.classList.toggle('behind', open);
   };
   const obs = new MutationObserver(sync);
   roots.forEach(r => obs.observe(r, { attributes: true, attributeFilter: ['class'] }));
