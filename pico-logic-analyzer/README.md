@@ -6,6 +6,12 @@ It runs on every Pico: the Pico, Pico H, Pico W, Pico WH, Pico 2 and Pico 2 W.
 
 **[Open the app](https://siammohammad10.github.io/Weekend-Projects/pico-logic-analyzer/web/)**. It needs a Pico with the firmware on it: everything you see in it comes from your board.
 
+![A real capture from a Pico H running the test wiring: 1 kHz PWM, UART, I2C to an SSD1306 OLED and SPI, decoded](docs/capture.png)
+
+A real capture from a Pico H with the [test wiring](#test-wiring): the 1 kHz PWM on CH0, `hello` over UART on CH1, the I2C write to the OLED on CH2 and CH3, and `PICO` over SPI on CH4 to CH6, each with its decoder.
+
+Before you connect, the app shows the firmware setup steps:
+
 ![The app before connecting: the firmware setup steps, the capture settings and the eight channels](docs/app.png)
 
 ## What it does
