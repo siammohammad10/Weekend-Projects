@@ -454,7 +454,7 @@
       $('#readout').innerHTML = '<span>No capture</span>';
       return;
     }
-    const t0 = view.start / cap.rate,
+    const t0 = Math.round(view.start) / cap.rate,
       span = view.visibleSamples / cap.rate;
     $('#readout').innerHTML =
       `<span>Showing <b>${PLA.fmtTime(span)}</b></span><span>from <b>${PLA.fmtTime(t0)}</b></span><span>${PLA.fmtRate(cap.rate)}</span>`;
