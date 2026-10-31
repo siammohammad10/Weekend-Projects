@@ -8,44 +8,116 @@
       name="description"
       content="An 8-channel logic analyzer made from a Raspberry Pi Pico, with UART, I2C and SPI decoding in the browser."
     />
+    <meta name="theme-color" content="#06080b" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#eef0f4" media="(prefers-color-scheme: light)" />
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="css/app.css?v=1" />
-    <script src="js/util.js?v=1" defer></script>
-    <script src="js/capture.js?v=1" defer></script>
-    <script src="js/decoders/uart.js?v=1" defer></script>
-    <script src="js/decoders/i2c.js?v=1" defer></script>
-    <script src="js/decoders/spi.js?v=1" defer></script>
-    <script src="js/demo.js?v=1" defer></script>
-    <script src="js/device.js?v=1" defer></script>
-    <script src="js/view.js?v=1" defer></script>
-    <script src="js/export.js?v=1" defer></script>
-    <script src="js/app.js?v=1" defer></script>
+    <link rel="stylesheet" href="css/app.css?v=3" />
+    <script src="js/util.js?v=3" defer></script>
+    <script src="js/boards.js?v=3" defer></script>
+    <script src="js/capture.js?v=3" defer></script>
+    <script src="js/decoders/uart.js?v=3" defer></script>
+    <script src="js/decoders/i2c.js?v=3" defer></script>
+    <script src="js/decoders/spi.js?v=3" defer></script>
+    <script src="js/demo.js?v=3" defer></script>
+    <script src="js/device.js?v=3" defer></script>
+    <script src="js/view.js?v=3" defer></script>
+    <script src="js/export.js?v=3" defer></script>
+    <script src="js/app.js?v=3" defer></script>
   </head>
   <body>
     <header class="top">
       <div class="brand">
         <svg viewBox="0 0 32 32" aria-hidden="true">
-          <rect width="32" height="32" rx="8" fill="currentColor" />
+          <defs>
+            <linearGradient id="brand-g" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#ffb057" />
+              <stop offset="1" stop-color="#ff7a1a" />
+            </linearGradient>
+          </defs>
+          <rect width="32" height="32" rx="8" fill="url(#brand-g)" />
           <path
             d="M5 21h4v-9h5v9h4v-9h4v9h5"
             fill="none"
-            stroke="var(--brand-wave)"
+            stroke="#160b02"
             stroke-width="2.4"
             stroke-linejoin="round"
             stroke-linecap="round"
           />
         </svg>
         <span>Pico Logic Analyzer</span>
+        <small>8 channels · UART · I2C · SPI</small>
       </div>
       <div class="top-right">
         <span class="conn" id="conn"><i></i><span>Not connected</span></span>
+        <button class="btn ghost" id="setup-btn" aria-expanded="false" aria-controls="setup-wrap">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <path d="M8 2v8M4.5 6.5 8 10l3.5-3.5M3 13h10" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          Firmware
+        </button>
         <button class="btn ghost" id="demo-btn">Try the demo</button>
         <button class="btn" id="connect-btn">Connect Pico</button>
       </div>
     </header>
 
     <main class="wrap">
-      <section class="toolbar" aria-label="Capture settings">
+      <div class="setup-wrap" id="setup-wrap">
+        <div>
+          <section class="setup card" aria-labelledby="setup-title">
+            <div class="setup-head">
+              <h2 id="setup-title">Set up your Pico</h2>
+              <p>Four steps, about a minute. You only flash once.</p>
+              <button class="text-btn" id="setup-close">Hide</button>
+            </div>
+            <ol class="steps">
+              <li>
+                <div class="step-title"><span class="n">1</span>Pick your board</div>
+                <select id="board" aria-label="Your board"></select>
+                <div class="board-facts" id="board-facts"></div>
+                <p id="board-look"></p>
+              </li>
+              <li>
+                <div class="step-title"><span class="n">2</span>Download the firmware</div>
+                <a class="btn primary" id="board-dl" download>
+                  <svg
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.7"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M8 2v8M4.5 6.5 8 10l3.5-3.5M3 13h10"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                  Download .uf2
+                </a>
+                <span class="file-name" id="board-file"></span>
+              </li>
+              <li>
+                <div class="step-title"><span class="n">3</span>Flash it</div>
+                <p>
+                  Hold the <b>BOOTSEL</b> button while you plug the Pico into USB, then let go. A drive called
+                  <code id="board-drive">RPI-RP2</code> opens. Drag the file onto it. The Pico restarts on its
+                  own when it's done.
+                </p>
+              </li>
+              <li>
+                <div class="step-title"><span class="n">4</span>Connect</div>
+                <button class="btn" id="setup-connect">Connect Pico</button>
+                <p id="setup-browser">
+                  The browser lists only Raspberry Pi devices, so pick the one it shows. Works in Chrome and
+                  Edge on a computer.
+                </p>
+              </li>
+            </ol>
+          </section>
+        </div>
+      </div>
+
+      <section class="toolbar card rise" style="--i: 0" aria-label="Capture settings">
         <label class="field">
           <span>Sample rate</span>
           <select id="rate"></select>
@@ -69,7 +141,7 @@
         <div class="toolbar-end">
           <button class="btn primary" id="capture-btn">
             <svg viewBox="0 0 16 16" aria-hidden="true">
-              <circle cx="8" cy="8" r="5" fill="currentColor" />
+              <circle cx="8" cy="8" r="5" />
             </svg>
             <span>Capture</span>
           </button>
@@ -78,7 +150,7 @@
 
       <div class="status" id="status" role="status"></div>
 
-      <section class="scope" aria-label="Waveforms">
+      <section class="scope card rise" style="--i: 1" aria-label="Waveforms">
         <div class="scope-head">
           <div class="readout" id="readout"></div>
           <div class="scope-tools">
@@ -114,14 +186,14 @@
                 </div>
               </div>
             </div>
-            <div class="tip" id="tip" hidden></div>
+            <div class="tip" id="tip"></div>
           </div>
         </div>
         <div class="hidden-ch" id="hidden-ch"></div>
       </section>
 
       <div class="panels">
-        <section class="panel" aria-labelledby="dec-title">
+        <section class="panel card rise" style="--i: 2" aria-labelledby="dec-title">
           <div class="panel-head">
             <h2 id="dec-title">Decoders</h2>
             <div class="add">
@@ -134,7 +206,7 @@
           <div id="decoders" class="decoders"></div>
         </section>
 
-        <section class="panel" aria-labelledby="meas-title">
+        <section class="panel card rise" style="--i: 3" aria-labelledby="meas-title">
           <div class="panel-head">
             <h2 id="meas-title">Measurements</h2>
             <span class="small muted" id="meas-scope"></span>
@@ -144,7 +216,7 @@
         </section>
       </div>
 
-      <section class="panel" aria-labelledby="log-title">
+      <section class="panel card rise" style="--i: 4" aria-labelledby="log-title">
         <div class="panel-head">
           <h2 id="log-title">Decoded</h2>
           <span class="small muted" id="log-count"></span>
@@ -165,7 +237,7 @@
       </footer>
     </main>
 
-    <div class="toast" id="toast" role="alert" hidden></div>
+    <div class="toast" id="toast" role="alert"></div>
     <noscript><p class="noscript">This app needs JavaScript.</p></noscript>
   </body>
 </html>

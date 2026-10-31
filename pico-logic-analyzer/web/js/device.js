@@ -42,12 +42,12 @@
       this.len = 0;
       await this.write('ID\n');
       const id = await this.readLine(2000).catch(() => null);
-      const m = id && id.match(/^PLA (\d+) (\d+) (\d+)/);
+      const m = id && id.match(/^PLA (\d+) (\d+) (\d+)(?: (\S+))?/);
       if (!m) {
         await this.close();
         throw new Error("That port didn't answer like the analyzer firmware. Flash the .uf2 file first.");
       }
-      this.info = { version: +m[1], maxSamples: +m[2], clock: +m[3] };
+      this.info = { version: +m[1], maxSamples: +m[2], clock: +m[3], board: m[4] || null };
       return this.info;
     }
 

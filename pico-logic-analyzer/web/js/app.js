@@ -21,6 +21,7 @@
     trig: saved.trig === undefined ? 1 : saved.trig,
     edge: saved.edge || 'F',
     decoders: (saved.decoders || []).map((d, i) => ({ ...d, id: i + 1 })),
+    board: saved.board || 'pico',
   };
   let nextId = S.decoders.length + 1;
   let cap = null,
@@ -29,7 +30,9 @@
     demo = false,
     demoCounter = 7,
     results = [],
-    logRows = [];
+    logRows = [],
+    freshLog = false,
+    entering = null;
 
   const view = new PLA.WaveView($('#wave'));
 
@@ -42,7 +45,40 @@
       trig: S.trig,
       edge: S.edge,
       decoders: S.decoders.map(({ type, params }) => ({ type, params })),
+      board: S.board,
     });
+
+  // ---------------------------------------------------------------- board and firmware
+
+  function renderBoard() {
+    const sel = $('#board');
+    if (!sel.options.length)
+      sel.innerHTML = PLA.BOARDS.map(b => `<option value="${b.id}">${esc(b.name)}</option>`).join('');
+    const b = PLA.board(S.board);
+    sel.value = b.id;
+    const file = PLA.firmwareFile(b);
+    $('#board-facts').innerHTML = `<span>${b.chip}</span><span>${PLA.fmtCount(b.samples)} samples</span>`;
+    $('#board-look').textContent = `${b.look} ${b.led}`;
+    const dl = $('#board-dl');
+    dl.href = PLA.FIRMWARE_DIR + file;
+    dl.setAttribute('download', file);
+    $('#board-file').textContent = file;
+    $('#board-drive').textContent = b.drive;
+  }
+
+  function setSetup(open, remember = true) {
+    $('#setup-wrap').classList.toggle('open', open);
+    $('#setup-btn').setAttribute('aria-expanded', String(open));
+    if (remember) PLA.store.set('pla-setup-open', open);
+  }
+
+  $('#board').addEventListener('change', e => {
+    S.board = e.target.value;
+    save();
+    renderBoard();
+  });
+  $('#setup-btn').addEventListener('click', () => setSetup(!$('#setup-wrap').classList.contains('open')));
+  $('#setup-close').addEventListener('click', () => setSetup(false));
 
   // ---------------------------------------------------------------- settings
 
@@ -100,24 +136,30 @@
 
   function status(html, cls = '') {
     const el = $('#status');
+    if (el.innerHTML === html) return;
     el.className = 'status ' + cls;
     el.innerHTML = html;
+    // Restart the fade so every new message eases in. Progress updates skip it.
+    if (!html.includes('class="bar"')) {
+      void el.offsetWidth;
+      el.classList.add('fade');
+    }
   }
 
   let toastTimer;
   function toast(text) {
     const t = $('#toast');
     t.textContent = text;
-    t.hidden = false;
+    t.classList.add('show');
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => (t.hidden = true), 4200);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 4200);
   }
 
   function setConn() {
     const el = $('#conn');
     el.className = 'conn' + (device ? ' on' : demo ? ' demo' : '');
     el.querySelector('span').textContent = device
-      ? `Pico connected · ${PLA.fmtCount(device.info.maxSamples)} samples`
+      ? `${PLA.boardShortName(device.info.board)} connected · ${PLA.fmtCount(device.info.maxSamples)} samples`
       : demo
         ? 'Demo signals'
         : 'Not connected';
@@ -199,7 +241,8 @@
   function load(c) {
     const same = cap && cap.n === c.n && cap.rate === c.rate;
     cap = c;
-    $('#empty').hidden = true;
+    $('#empty').classList.add('gone');
+    freshLog = true;
     view.setCapture(c, same);
     decodeAll();
     const parts = [
@@ -283,7 +326,7 @@
           })
           .join('');
         const main = +(d.params.rx ?? d.params.sda ?? d.params.mosi ?? 0);
-        return `<div class="dec" data-id="${d.id}">
+        return `<div class="dec ${entering === d.id ? 'enter' : ''}" data-id="${d.id}">
           <div class="dec-name"><i style="background:var(--ch${main})"></i>${def.name}</div>
           ${fields}
           <button class="text-btn remove" data-remove="${d.id}" aria-label="Remove ${def.name} decoder">Remove</button>
@@ -306,17 +349,21 @@
     if (!id) return;
     S.decoders = S.decoders.filter(d => d.id !== +id);
     save();
-    renderDecoders();
     decodeAll();
+    // Let the card slide out before the list closes the gap.
+    e.target.closest('.dec').classList.add('leaving');
+    setTimeout(renderDecoders, matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 220);
   });
   document.querySelectorAll('[data-add]').forEach(b =>
     b.addEventListener('click', () => {
       const type = b.dataset.add;
       const params = {};
       PLA.DECODERS[type].params.forEach(p => (params[p.key] = p.default));
+      entering = nextId;
       S.decoders.push({ id: nextId++, type, params });
       save();
       renderDecoders();
+      entering = null;
       decodeAll();
     }),
   );
@@ -379,6 +426,9 @@
   // ---------------------------------------------------------------- decoded log
 
   function renderLog() {
+    // Rows ease in only when a new capture arrives, not on every rename.
+    const fresh = freshLog;
+    freshLog = false;
     logRows = [];
     for (const { d, r } of results) {
       r.lanes.forEach((lane, n) => {
@@ -410,7 +460,7 @@
           (
             r,
             n,
-          ) => `<tr class="row ${r.item.kind === 'error' || r.item.kind === 'nack' ? 'err' : ''}" data-row="${n}">
+          ) => `<tr class="row ${r.item.kind === 'error' || r.item.kind === 'nack' ? 'err' : ''} ${fresh && n < 30 ? 'in' : ''}" style="--d:${n}" data-row="${n}">
           <td class="num">${PLA.fmtTime(r.item.s / cap.rate, 3)}</td>
           <td><span class="kind">${r.decoder}</span></td>
           <td>${esc(S.names[r.channel])}</td>
@@ -506,12 +556,12 @@
   view.onHover = h => {
     const tip = $('#tip');
     if (!h || !cap || !h.hit) {
-      tip.hidden = true;
+      tip.classList.remove('show');
       return;
     }
     const { item, row } = h.hit;
     tip.innerHTML = `<b>${esc(item.text)}</b>${item.detail ? `<br>${esc(item.detail)}` : ''}<br>${PLA.fmtTime(item.s / cap.rate, 4)} · ${esc(S.names[row.ch])}`;
-    tip.hidden = false;
+    tip.classList.add('show');
     const box = tip.parentElement.getBoundingClientRect();
     const w = tip.offsetWidth;
     tip.style.left = Math.min(box.width - w - 8, Math.max(8, h.px + 14)) + 'px';
@@ -548,10 +598,16 @@
         setBusy(false);
         status('The Pico was unplugged.', 'error');
       };
+      if (d.info.board && PLA.BOARDS.some(b => b.id === d.info.board)) {
+        S.board = d.info.board;
+        save();
+        renderBoard();
+      }
+      setSetup(false, false);
       setConn();
       fillSettings();
       status(
-        `Connected. Firmware v${d.info.version}, up to <b>${PLA.fmtCount(d.info.maxSamples)}</b> samples. Press Capture.`,
+        `Connected to a ${PLA.boardShortName(d.info.board)}. Firmware v${d.info.version}, up to <b>${PLA.fmtCount(d.info.maxSamples)}</b> samples. Press Capture.`,
       );
       $('#empty-text').textContent = 'Connected. Set the trigger and press Capture.';
     } catch (e) {
@@ -565,6 +621,7 @@
   $('#capture-btn').addEventListener('click', capture);
   $('#connect-btn').addEventListener('click', connect);
   $('#empty-connect').addEventListener('click', connect);
+  $('#setup-connect').addEventListener('click', connect);
   $('#demo-btn').addEventListener('click', () => startDemo());
   $('#empty-demo').addEventListener('click', () => startDemo());
   $('#zoom-in').addEventListener('click', () => view.zoomAt(view.width / 2, 0.5));
@@ -605,6 +662,7 @@
 
   // ---------------------------------------------------------------- start
 
+  renderBoard();
   fillSettings();
   setConn();
   renderDecoders();
@@ -616,6 +674,11 @@
     $('#empty-text').textContent =
       "This browser can't talk to USB serial, so connecting a Pico needs Chrome or Edge on a computer. The demo works anywhere.";
     $('#empty-connect').hidden = true;
+    $('#setup-browser').textContent =
+      "This browser can't connect to a Pico. Download the firmware here, then open this page in Chrome or Edge on a computer.";
   }
-  if (new URLSearchParams(location.search).has('demo')) startDemo();
+  const wantDemo = new URLSearchParams(location.search).has('demo');
+  // First visit: show the setup steps, unless the link asked for the demo.
+  setSetup(PLA.store.get('pla-setup-open', !wantDemo), false);
+  if (wantDemo) startDemo();
 })();

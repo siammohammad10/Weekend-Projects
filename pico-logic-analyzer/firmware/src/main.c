@@ -2,7 +2,7 @@
 //
 // The host talks to the Pico over USB serial with one text command per line:
 //
-//   ID                         -> "PLA 1 <max samples> <clock hz>"
+//   ID                         -> "PLA 1 <max samples> <clock hz> <board>"
 //   CAP <rate> <samples> <trig> -> "ARMED <rate>", later "DATA <rate> <samples>" + raw bytes
 //   ABORT                      -> "ABORTED"
 //
@@ -25,11 +25,18 @@
 #define SYS_CLOCK_HZ 100000000u
 #define PROTOCOL_VERSION 1
 
+#ifndef PLA_BOARD
+#define PLA_BOARD "pico"
+#endif
+
 static char line[64];
 static size_t line_len;
 static uint32_t armed_rate;
 static uint32_t armed_samples;
 
+// On the W boards the LED hangs off the wireless chip, and GP25 belongs to that chip, so the
+// firmware leaves both alone there. PICO_DEFAULT_LED_PIN is only defined for the boards without
+// wireless.
 static void led(bool on) {
 #ifdef PICO_DEFAULT_LED_PIN
     gpio_put(PICO_DEFAULT_LED_PIN, on);
@@ -100,7 +107,7 @@ static void handle(char *cmd) {
     while (*cmd == ' ') cmd++;
     if (!*cmd) return;
     if (!strcmp(cmd, "ID")) {
-        printf("PLA %d %u %u\n", PROTOCOL_VERSION, CAPTURE_MAX_SAMPLES, SYS_CLOCK_HZ);
+        printf("PLA %d %u %u %s\n", PROTOCOL_VERSION, CAPTURE_MAX_SAMPLES, SYS_CLOCK_HZ, PLA_BOARD);
         fflush(stdout);
     } else if (!strncmp(cmd, "CAP ", 4)) {
         command_cap(cmd + 4);

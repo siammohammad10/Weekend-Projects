@@ -1,7 +1,10 @@
 cmake_minimum_required(VERSION 3.13)
 
 # Set PICO_SDK_PATH, or pass -DPICO_SDK_PATH=..., before configuring.
-# Build for a Pico 2 with -DPICO_BOARD=pico2.
+# Pick the board with -DPICO_BOARD=pico, pico_w, pico2 or pico2_w (pico is the default).
+if(NOT PICO_BOARD)
+    set(PICO_BOARD pico)
+endif()
 include(pico_sdk_import.cmake)
 
 project(pico_logic_analyzer C CXX ASM)
@@ -27,6 +30,8 @@ target_link_libraries(logic_analyzer
 )
 
 target_compile_options(logic_analyzer PRIVATE -Wall -Wextra)
+# The web app shows which board it's talking to.
+target_compile_definitions(logic_analyzer PRIVATE PLA_BOARD="${PICO_BOARD}")
 
 pico_enable_stdio_usb(logic_analyzer 1)
 pico_enable_stdio_uart(logic_analyzer 0)

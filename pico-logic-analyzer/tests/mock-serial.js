@@ -11,7 +11,7 @@
 
   function handle(cmd) {
     log.push(cmd);
-    if (cmd === 'ID') return say('PLA 1 200000 100000000\n');
+    if (cmd === 'ID') return say('PLA 1 200000 100000000 pico_w\n');
     if (cmd === 'ABORT') {
       if (pending) clearTimeout(pending);
       pending = null;

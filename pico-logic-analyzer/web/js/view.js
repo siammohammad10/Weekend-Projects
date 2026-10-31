@@ -4,6 +4,9 @@
 // The view is a window onto the capture: `start` is the sample at the left edge and `spp` is
 // samples per pixel. Each pixel column is drawn from the edge list, so a 400,000-sample capture
 // draws as fast as a short one. Columns with several edges are drawn as a solid band.
+//
+// Zooming and panning ease toward a goal instead of jumping, and a new capture sweeps in from the
+// left like a scope trace. Both are skipped when the device asks for reduced motion.
 
 (function () {
   const PLA = globalThis.PLA;
@@ -11,6 +14,8 @@
     ROW = 46,
     LANE = 26,
     PAD = 11;
+  const still = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const easeOut = t => 1 - Math.pow(1 - t, 3);
 
   class WaveView {
     constructor(canvas) {
@@ -27,6 +32,9 @@
       this.onChange = () => {};
       this.onHover = () => {};
       this.colors = {};
+      this.goal = null; // { start, spp } the view is easing toward
+      this.reveal = 1; // 0 to 1 while a new capture sweeps in
+      this.frame = 0;
       this.bind();
       new ResizeObserver(() => this.resize()).observe(canvas.parentElement);
       matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
@@ -51,6 +59,7 @@
         cursorB: v('--cursor-b'),
         good: v('--good'),
         bad: v('--bad'),
+        glow: parseFloat(v('--trace-glow')) || 0,
         ch: Array.from({ length: PLA.CHANNELS }, (_, i) => v(`--ch${i}`)),
       };
     }
@@ -81,9 +90,13 @@
     setCapture(cap, keepView) {
       const prev = this.cap;
       this.cap = cap;
-      if (!keepView || !prev || prev.n !== cap.n) this.fit();
+      this.goal = null;
+      if (!keepView || !prev || prev.n !== cap.n) {
+        this.spp = cap.n / this.width;
+        this.start = 0;
+      }
       this.cursors = keepView ? this.cursors : { a: null, b: null };
-      this.draw();
+      this.sweep();
       this.onChange();
     }
 
@@ -91,49 +104,104 @@
       return this.width * this.spp;
     }
 
-    fit() {
-      if (!this.cap || !this.width) return;
-      this.spp = this.cap.n / this.width;
-      this.start = 0;
-      this.onChange();
-      this.draw();
+    // Clamped copy of a view: never past either end, never closer than 60 pixels per sample.
+    clamped(start, spp) {
+      if (!this.cap) return { start, spp };
+      spp = Math.min(this.cap.n / this.width, Math.max(1 / 60, spp));
+      start = Math.min(Math.max(0, this.cap.n - this.width * spp), Math.max(0, start));
+      return { start, spp };
     }
 
     clamp() {
-      if (!this.cap) return;
-      const maxSpp = this.cap.n / this.width;
-      this.spp = Math.min(maxSpp, Math.max(1 / 60, this.spp));
-      this.start = Math.min(Math.max(0, this.cap.n - this.visibleSamples), Math.max(0, this.start));
+      Object.assign(this, this.clamped(this.start, this.spp));
+    }
+
+    // Moves the view to a new start and scale, easing there over a few frames.
+    animateTo(start, spp) {
+      this.goal = this.clamped(start, spp);
+      if (still()) {
+        Object.assign(this, this.goal);
+        this.goal = null;
+        this.draw();
+        this.onChange();
+        return;
+      }
+      this.loop();
+    }
+
+    // Where the view is heading, or where it is if it isn't moving.
+    get target() {
+      return this.goal || { start: this.start, spp: this.spp };
+    }
+
+    fit() {
+      if (!this.cap || !this.width) return;
+      this.animateTo(0, this.cap.n / this.width);
     }
 
     zoomAt(px, factor) {
       if (!this.cap) return;
-      const s = this.start + px * this.spp;
-      this.spp *= factor;
-      this.clamp();
-      this.start = s - px * this.spp;
-      this.clamp();
-      this.draw();
-      this.onChange();
+      const t = this.target;
+      const s = t.start + px * t.spp;
+      const spp = this.clamped(0, t.spp * factor).spp;
+      this.animateTo(s - px * spp, spp);
     }
 
     panBy(px) {
-      this.start += px * this.spp;
-      this.clamp();
-      this.draw();
-      this.onChange();
+      if (!this.cap) return;
+      const t = this.target;
+      this.animateTo(t.start + px * t.spp, t.spp);
     }
 
     // Show samples [s, e) with a little room around them.
     show(s, e) {
       if (!this.cap) return;
       const span = Math.max(e - s, 8);
-      this.spp = (span * 3) / this.width;
-      this.clamp();
-      this.start = (s + e) / 2 - this.visibleSamples / 2;
-      this.clamp();
-      this.draw();
-      this.onChange();
+      const spp = this.clamped(0, (span * 3) / this.width).spp;
+      this.animateTo((s + e) / 2 - (this.width * spp) / 2, spp);
+    }
+
+    // Draws a new capture in from the left.
+    sweep() {
+      if (still()) {
+        this.reveal = 1;
+        this.draw();
+        return;
+      }
+      this.reveal = 0;
+      this.sweepStart = performance.now();
+      this.loop();
+    }
+
+    loop() {
+      if (this.frame) return;
+      let last = performance.now();
+      const tick = now => {
+        const dt = Math.min(64, now - last);
+        last = now;
+        let busy = false;
+        if (this.goal) {
+          // Ease the scale in log space so zooming in and out feel the same.
+          const k = 1 - Math.exp(-dt / 55);
+          const ls = Math.log(this.spp),
+            lg = Math.log(this.goal.spp);
+          this.spp = Math.exp(ls + (lg - ls) * k);
+          this.start += (this.goal.start - this.start) * k;
+          const px = Math.abs(this.goal.start - this.start) / this.spp;
+          if (px < 0.25 && Math.abs(lg - Math.log(this.spp)) < 0.002) {
+            Object.assign(this, this.goal);
+            this.goal = null;
+          } else busy = true;
+          this.onChange();
+        }
+        if (this.reveal < 1) {
+          this.reveal = Math.min(1, easeOut((now - this.sweepStart) / 520));
+          busy = busy || this.reveal < 1;
+        }
+        this.draw();
+        this.frame = busy ? requestAnimationFrame(tick) : 0;
+      };
+      this.frame = requestAnimationFrame(tick);
     }
 
     x(sample) {
@@ -183,9 +251,28 @@
       if (!this.cap) return;
 
       this.drawRuler();
+      const edge = this.reveal * W;
+      ctx.save();
+      if (this.reveal < 1) {
+        ctx.beginPath();
+        ctx.rect(0, RULER, edge, H - RULER);
+        ctx.clip();
+      }
       for (const row of this.rows) {
         this.drawTrace(row);
         row.lanes.forEach(l => this.drawLane(l, row));
+      }
+      ctx.restore();
+      if (this.reveal < 1) {
+        const g = ctx.createLinearGradient(edge - 60, 0, edge, 0);
+        g.addColorStop(0, 'rgba(0,0,0,0)');
+        g.addColorStop(1, c.accent);
+        ctx.globalAlpha = 0.18;
+        ctx.fillStyle = g;
+        ctx.fillRect(edge - 60, RULER, 60, H - RULER);
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = c.accent;
+        ctx.fillRect(edge - 1, RULER, 2, H - RULER);
       }
       this.drawMarkers();
     }
@@ -276,7 +363,13 @@
       ctx.strokeStyle = color;
       ctx.lineWidth = 1.5;
       ctx.lineJoin = 'miter';
+      if (this.colors.glow) {
+        // A soft glow under the trace in dark mode, like a phosphor screen.
+        ctx.shadowColor = color;
+        ctx.shadowBlur = this.colors.glow;
+      }
       ctx.stroke();
+      ctx.shadowBlur = 0;
 
       ctx.fillStyle = color;
       ctx.globalAlpha = 0.75;
@@ -449,6 +542,7 @@
       cv.addEventListener('pointerdown', e => {
         if (!this.cap || e.button !== 0) return;
         cv.setPointerCapture(e.pointerId);
+        this.goal = null;
         drag = { x: e.offsetX, start: this.start, moved: false };
       });
       cv.addEventListener('pointermove', e => {

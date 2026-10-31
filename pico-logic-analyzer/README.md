@@ -2,6 +2,8 @@
 
 An 8-channel logic analyzer made from one Raspberry Pi Pico. The Pico samples its pins into RAM, and a web page draws the waveforms and decodes UART, I2C and SPI. There's nothing to install: flash the firmware, open the page in Chrome or Edge, and click Connect.
 
+It runs on every Pico: the Pico, Pico H, Pico W, Pico WH, Pico 2 and Pico 2 W.
+
 **[Try it in your browser](https://siammohammad10.github.io/Weekend-Projects/pico-logic-analyzer/web/?demo)**. The demo plays the same test signals the firmware makes, so you can try the decoders without a Pico.
 
 ![The analyzer in dark mode, decoding UART, I2C and SPI](docs/app-dark.png)
@@ -12,7 +14,8 @@ An 8-channel logic analyzer made from one Raspberry Pi Pico. The Pico samples it
 | --- | --- |
 | Channels | 8, on GP0 to GP7 |
 | Sample rate | 10 kS/s to 100 MS/s, in steps that divide the 100 MHz system clock |
-| Capture length | 200,000 samples on a Pico, 400,000 on a Pico 2 |
+| Boards | Pico, Pico H, Pico W, Pico WH, Pico 2, Pico 2 W |
+| Capture length | 200,000 samples on the RP2040 boards, 400,000 on the RP2350 boards (Pico 2 and Pico 2 W) |
 | Trigger | Rising or falling edge on any channel, or start right away |
 | Decoders | UART (any common baud, normal or inverted), I2C (start, address, data, ACK/NACK, stop), SPI (modes 0 to 3, MSB or LSB first, optional chip select, MOSI and MISO) |
 | Measurements | Two cursors with time and frequency between them, plus frequency, duty cycle and edge count per channel |
@@ -23,16 +26,52 @@ Scroll to zoom, drag to pan, click to place cursor A, and shift-click or right-c
 
 ![An I2C write to an SSD1306 OLED, decoded](docs/i2c-dark.png)
 
-## Try it with a Pico
+## Set up your Pico
 
-1. Hold BOOTSEL while plugging in the Pico, then drag the `.uf2` file for your board onto the drive that appears:
-   - Pico or Pico H: [`firmware/dist/pico-logic-analyzer-pico.uf2`](firmware/dist/pico-logic-analyzer-pico.uf2)
-   - Pico 2: [`firmware/dist/pico-logic-analyzer-pico2.uf2`](firmware/dist/pico-logic-analyzer-pico2.uf2)
-2. Open the [web app](https://siammohammad10.github.io/Weekend-Projects/pico-logic-analyzer/web/) in Chrome or Edge on a computer, or Firefox 151 and later. Safari and phones don't support Web Serial.
-3. Click **Connect Pico** and pick the Pico from the list.
-4. Choose a sample rate, a trigger and a capture length, then click **Capture**.
+The quickest way is the **Firmware** panel at the top of the [web app](https://siammohammad10.github.io/Weekend-Projects/pico-logic-analyzer/web/): pick your board from the list and it gives you the right file. 
 
-The onboard LED stays on while the Pico waits for the trigger.
+![The Firmware panel: pick a board, download its file, flash it, connect](docs/setup-light.png)
+
+The same steps in full:
+
+### 1. Find out which board you have
+
+| Board | How to tell | Chip | Capture length | Firmware |
+| --- | --- | --- | --- | --- |
+| Pico, Pico H | No silver metal can. The H has headers already soldered on. | RP2040 | 200,000 samples | [pico-logic-analyzer-pico.uf2](https://github.com/siammohammad10/Weekend-Projects/raw/main/pico-logic-analyzer/firmware/dist/pico-logic-analyzer-pico.uf2) |
+| Pico W, Pico WH | A silver metal can and an antenna at the end opposite the USB port | RP2040 | 200,000 samples | [pico-logic-analyzer-pico_w.uf2](https://github.com/siammohammad10/Weekend-Projects/raw/main/pico-logic-analyzer/firmware/dist/pico-logic-analyzer-pico_w.uf2) |
+| Pico 2 | The main chip is marked RP2350, with no metal can | RP2350 | 400,000 samples | [pico-logic-analyzer-pico2.uf2](https://github.com/siammohammad10/Weekend-Projects/raw/main/pico-logic-analyzer/firmware/dist/pico-logic-analyzer-pico2.uf2) |
+| Pico 2 W | The main chip is marked RP2350, plus the metal can and antenna | RP2350 | 400,000 samples | [pico-logic-analyzer-pico2_w.uf2](https://github.com/siammohammad10/Weekend-Projects/raw/main/pico-logic-analyzer/firmware/dist/pico-logic-analyzer-pico2_w.uf2) |
+
+Click the file for your board to download it. All four are also in [`firmware/dist`](firmware/dist).
+
+Picked the wrong file? Nothing breaks. Flash the right one over it the same way.
+
+### 2. Flash the firmware
+
+1. Unplug the Pico.
+2. Hold down the white **BOOTSEL** button on the board.
+3. While still holding it, plug the Pico into your computer with a USB data cable. Then let go of the button.
+4. A new drive appears, like a USB stick. It's called **RPI-RP2** on the Pico and Pico W, or **RP2350** on the Pico 2 and Pico 2 W.
+5. Drag the `.uf2` file onto that drive.
+6. The drive disappears by itself after a second or two. That means the Pico restarted with the new firmware. Your computer may say the drive wasn't ejected properly. That's normal and safe to ignore.
+
+You only need to flash once. The firmware stays on the Pico when it's unplugged. To put something else on the Pico later, such as MicroPython, flash that `.uf2` the same way.
+
+### 3. Connect from the browser
+
+1. Open the [web app](https://siammohammad10.github.io/Weekend-Projects/pico-logic-analyzer/web/) in **Chrome or Edge** on Windows, macOS, Linux or ChromeOS. Firefox works from version 151. Safari and phones can't use USB serial yet, but the demo works there.
+2. Click **Connect Pico**. The browser opens a list that only shows Raspberry Pi devices. Pick the one there and click **Connect**.
+3. The top of the page shows which board it found, for example *Pico W connected · 200,000 samples*.
+
+On Linux, if the Pico shows up but won't connect, your account may not have permission to use serial ports. Run `sudo usermod -aG dialout $USER`, then log out and back in.
+
+### 4. Make your first capture
+
+1. Choose a **sample rate**. Sample at least 4 times faster than the fastest signal, and 10 times is better. For 115200-baud UART, 2 MS/s is plenty.
+2. Choose how many **samples** to take. The toolbar shows how long that window is.
+3. Choose a **trigger**: a channel and an edge to start on, or *None* to start right away.
+4. Click **Capture**. On the Pico, Pico H and Pico 2, the green LED stays on while it waits for the trigger. On the W boards the LED is wired to the wireless chip, so it stays off. Click **Stop** if the trigger never comes.
 
 ### Test wiring
 
@@ -66,7 +105,7 @@ To try the decoders, add UART on channel 1, I2C on channels 2 and 3, and SPI on 
 
 | Command | Reply |
 | --- | --- |
-| `ID` | `PLA 1 <max samples> <clock Hz>` |
+| `ID` | `PLA 1 <max samples> <clock Hz> <board>` |
 | `CAP <rate> <samples> <trigger>` | `ARMED <rate>`, then later `DATA <rate> <samples>` followed by the raw bytes |
 | `ABORT` | `ABORTED` |
 
@@ -82,11 +121,13 @@ pico-logic-analyzer/
 │   │   ├── main.c            USB commands and the main loop
 │   │   ├── capture.c         PIO program, DMA and the trigger
 │   │   └── test_signals.c    PWM, UART, SPI and the OLED on spare pins
-│   └── dist/                 Ready-to-flash .uf2 files
+│   ├── build-all.sh          Builds every board into dist/
+│   └── dist/                 Ready-to-flash .uf2 files, one per board
 ├── web/
 │   ├── index.html
 │   ├── css/app.css
 │   └── js/
+│       ├── boards.js         The supported boards and their firmware files
 │       ├── device.js         Web Serial and the protocol
 │       ├── capture.js        Samples, edges and measurements
 │       ├── view.js           The waveform canvas
@@ -107,11 +148,13 @@ You need the [Pico SDK](https://github.com/raspberrypi/pico-sdk) (2.1 or later) 
 ```sh
 cd firmware
 export PICO_SDK_PATH=/path/to/pico-sdk
-cmake -S . -B build -DPICO_BOARD=pico      # or pico2
+cmake -S . -B build -DPICO_BOARD=pico      # or pico_w, pico2, pico2_w
 cmake --build build
 ```
 
-The output is `build/logic_analyzer.uf2`.
+The output is `build/logic_analyzer.uf2`. To build all four boards into `dist/` at once, run `./build-all.sh`.
+
+The firmware tells the web app which board it was built for, so the app can show it and pick the right capture length. On the W boards it leaves GP25 and the LED alone, because they belong to the wireless chip.
 
 ## Tests
 
@@ -122,6 +165,18 @@ node tests/decoders.test.js
 ```
 
 `tests/mock-serial.js` stands in for `navigator.serial` and answers like the firmware does, including captures that wait on a trigger and get stopped. Load it before the app to test connecting, capturing and stopping in a browser without a Pico.
+
+## Troubleshooting
+
+| What happens | What to try |
+| --- | --- |
+| No drive appears when you plug in with BOOTSEL held | Hold the button before the cable goes in, not after. Try another cable: many cheap cables only carry power. |
+| The Connect list is empty | Flash the firmware first. Use a data cable. Close any other program that has the port open, such as Thonny or the Arduino serial monitor. |
+| "That port didn't answer like the analyzer firmware" | The Pico is running something else. Flash the `.uf2` for your board again. |
+| Capture never finishes | The trigger edge isn't happening. Click Stop, then check the wire, the ground connection and the edge, or set the trigger to None. |
+| The UART decoder shows a warning or wrong characters | Raise the sample rate to at least 4 times the baud rate, and check the baud setting. |
+| I2C shows only the address and a NACK | Nothing answered. Check the OLED's power (3V3 and GND) and its SDA and SCL wires. |
+| The LED never lights on a Pico W or Pico 2 W | That's expected. The LED on the W boards belongs to the wireless chip. |
 
 ## Safety
 
