@@ -136,8 +136,7 @@ pico-logic-analyzer/
 │       ├── export.js         VCD and CSV
 │       └── app.js            The page
 ├── tests/
-│   ├── decoders.test.js
-│   └── mock-serial.js        A fake Pico for browser tests
+│   └── decoders.test.js
 └── docs/
 ```
 
@@ -163,8 +162,6 @@ The decoders are checked against generated signals at several sample rates:
 ```sh
 node tests/decoders.test.js
 ```
-
-`tests/mock-serial.js` stands in for `navigator.serial` and answers like the firmware does, including captures that wait on a trigger and get stopped. Load it before the app to test connecting, capturing and stopping in a browser without a Pico.
 
 ## Troubleshooting
 
