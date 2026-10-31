@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Pico Logic Analyzer</title>
+    <meta
+      name="description"
+      content="An 8-channel logic analyzer made from a Raspberry Pi Pico, with UART, I2C and SPI decoding in the browser."
+    />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="css/app.css?v=1" />
+    <script src="js/util.js?v=1" defer></script>
+    <script src="js/capture.js?v=1" defer></script>
+    <script src="js/decoders/uart.js?v=1" defer></script>
+    <script src="js/decoders/i2c.js?v=1" defer></script>
+    <script src="js/decoders/spi.js?v=1" defer></script>
+    <script src="js/demo.js?v=1" defer></script>
+    <script src="js/device.js?v=1" defer></script>
+    <script src="js/view.js?v=1" defer></script>
+    <script src="js/export.js?v=1" defer></script>
+    <script src="js/app.js?v=1" defer></script>
+  </head>
+  <body>
+    <header class="top">
+      <div class="brand">
+        <svg viewBox="0 0 32 32" aria-hidden="true">
+          <rect width="32" height="32" rx="8" fill="currentColor" />
+          <path
+            d="M5 21h4v-9h5v9h4v-9h4v9h5"
+            fill="none"
+            stroke="var(--brand-wave)"
+            stroke-width="2.4"
+            stroke-linejoin="round"
+            stroke-linecap="round"
+          />
+        </svg>
+        <span>Pico Logic Analyzer</span>
+      </div>
+      <div class="top-right">
+        <span class="conn" id="conn"><i></i><span>Not connected</span></span>
+        <button class="btn ghost" id="demo-btn">Try the demo</button>
+        <button class="btn" id="connect-btn">Connect Pico</button>
+      </div>
+    </header>
+
+    <main class="wrap">
+      <section class="toolbar" aria-label="Capture settings">
+        <label class="field">
+          <span>Sample rate</span>
+          <select id="rate"></select>
+        </label>
+        <label class="field">
+          <span>Samples</span>
+          <select id="samples"></select>
+        </label>
+        <label class="field">
+          <span>Trigger</span>
+          <select id="trig-ch"></select>
+        </label>
+        <label class="field">
+          <span>Edge</span>
+          <select id="trig-edge">
+            <option value="F">Falling</option>
+            <option value="R">Rising</option>
+          </select>
+        </label>
+        <span class="window" id="window"></span>
+        <div class="toolbar-end">
+          <button class="btn primary" id="capture-btn">
+            <svg viewBox="0 0 16 16" aria-hidden="true">
+              <circle cx="8" cy="8" r="5" fill="currentColor" />
+            </svg>
+            <span>Capture</span>
+          </button>
+        </div>
+      </section>
+
+      <div class="status" id="status" role="status"></div>
+
+      <section class="scope" aria-label="Waveforms">
+        <div class="scope-head">
+          <div class="readout" id="readout"></div>
+          <div class="scope-tools">
+            <button class="icon-btn" id="zoom-out" title="Zoom out (−)" aria-label="Zoom out">
+              <svg viewBox="0 0 16 16"><path d="M3 8h10" /></svg>
+            </button>
+            <button class="icon-btn" id="zoom-in" title="Zoom in (+)" aria-label="Zoom in">
+              <svg viewBox="0 0 16 16"><path d="M3 8h10M8 3v10" /></svg>
+            </button>
+            <button class="text-btn" id="fit" title="Show the whole capture (F)">Fit</button>
+            <span class="sep"></span>
+            <button class="text-btn" id="export-vcd">Export VCD</button>
+            <button class="text-btn" id="export-csv">Export CSV</button>
+          </div>
+        </div>
+        <div class="scope-body">
+          <div class="labels" id="labels"></div>
+          <div class="canvas-box">
+            <canvas id="wave"></canvas>
+            <div class="empty" id="empty">
+              <div class="empty-card">
+                <svg viewBox="0 0 120 40" aria-hidden="true">
+                  <path d="M4 30h14V10h14v20h10V10h8v20h22V10h14v20h10V10h20" />
+                </svg>
+                <h1>Nothing captured yet</h1>
+                <p id="empty-text">
+                  Connect a Pico running the analyzer firmware, or try the demo to see UART, I2C and SPI
+                  decoded from the test signals.
+                </p>
+                <div class="empty-actions">
+                  <button class="btn primary" id="empty-demo">Try the demo</button>
+                  <button class="btn" id="empty-connect">Connect Pico</button>
+                </div>
+              </div>
+            </div>
+            <div class="tip" id="tip" hidden></div>
+          </div>
+        </div>
+        <div class="hidden-ch" id="hidden-ch"></div>
+      </section>
+
+      <div class="panels">
+        <section class="panel" aria-labelledby="dec-title">
+          <div class="panel-head">
+            <h2 id="dec-title">Decoders</h2>
+            <div class="add">
+              <span class="small muted">Add</span>
+              <button class="chip-btn" data-add="uart">UART</button>
+              <button class="chip-btn" data-add="i2c">I2C</button>
+              <button class="chip-btn" data-add="spi">SPI</button>
+            </div>
+          </div>
+          <div id="decoders" class="decoders"></div>
+        </section>
+
+        <section class="panel" aria-labelledby="meas-title">
+          <div class="panel-head">
+            <h2 id="meas-title">Measurements</h2>
+            <span class="small muted" id="meas-scope"></span>
+          </div>
+          <dl class="cursors" id="cursors"></dl>
+          <table class="stats" id="stats"></table>
+        </section>
+      </div>
+
+      <section class="panel" aria-labelledby="log-title">
+        <div class="panel-head">
+          <h2 id="log-title">Decoded</h2>
+          <span class="small muted" id="log-count"></span>
+        </div>
+        <div class="log-wrap">
+          <table class="log" id="log"></table>
+        </div>
+      </section>
+
+      <footer class="foot">
+        <span
+          >Scroll to zoom, drag to pan. Click to place cursor A, shift-click or right-click for B. Keys: F
+          fit, + − zoom, ← → pan, C capture, Esc clear.</span
+        >
+        <a href="https://github.com/siammohammad10/Weekend-Projects/tree/main/pico-logic-analyzer"
+          >Source on GitHub</a
+        >
+      </footer>
+    </main>
+
+    <div class="toast" id="toast" role="alert" hidden></div>
+    <noscript><p class="noscript">This app needs JavaScript.</p></noscript>
+  </body>
+</html>

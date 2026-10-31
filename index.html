@@ -51,6 +51,7 @@
       .links { display: flex; gap: 18px; margin-top: 16px; font-weight: 500; }
       .links a { color: var(--accent); text-decoration: none; }
       .links a:hover { text-decoration: underline; }
+      .card + .card { margin-top: 16px; }
       footer { margin-top: 48px; color: var(--muted); font-size: 14px; }
     </style>
   </head>
@@ -58,6 +59,15 @@
     <main>
       <h1>Weekend projects</h1>
       <p class="lead">Things I build on weekends, mostly tools for problems I run into at school.</p>
+      <article class="card">
+        <span class="tag">Hardware + web · Raspberry Pi Pico</span>
+        <h2>Pico Logic Analyzer</h2>
+        <p>Eight channels at up to 100 MS/s from a $4 board. The Pico captures with PIO and DMA, and the browser decodes UART, I2C and SPI.</p>
+        <div class="links">
+          <a href="pico-logic-analyzer/web/?demo">Open the demo</a>
+          <a href="https://github.com/siammohammad10/Weekend-Projects/tree/main/pico-logic-analyzer">Code</a>
+        </div>
+      </article>
       <article class="card">
         <span class="tag">Web app · Texas Tech ECE</span>
         <h2>ECE Stockroom</h2>
