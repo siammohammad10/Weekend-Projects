@@ -1,6 +1,6 @@
-// Demo captures. The signals are the same ones the firmware puts on its spare pins, described as
-// edges in time and then sampled at whatever rate you pick, so a low rate aliases just like the
-// real thing.
+// Known signals for the decoder tests. Only the tests load this file; the app never does.
+// The signals match what the firmware puts on its spare pins, built edge by edge from known bytes
+// and then sampled at the rate under test:
 //
 //   CH0  1 kHz PWM
 //   CH1  UART, 115200 baud, "hello\n" every 50 ms
@@ -9,7 +9,6 @@
 //   CH4  SPI clock ┐
 //   CH5  SPI MOSI  ├ 500 kHz, mode 0, "PICO" every 50 ms
 //   CH6  SPI CS    ┘
-//   CH7  unused
 
 (function () {
   const PLA = globalThis.PLA;
@@ -116,8 +115,8 @@
   }
 
   // Returns a Capture of `samples` samples at `rate`. With a trigger, sample 0 is the first matching
-  // edge after 0.5 ms; without one the window starts at a different place each time.
-  PLA.demoCapture = ({ rate = 2e6, samples = 200000, trigger = null, counter = 7 } = {}) => {
+  // edge after 0.5 ms, just as the firmware would start it.
+  PLA.testCapture = ({ rate = 2e6, samples = 200000, trigger = null, counter = 7 } = {}) => {
     const span = samples / rate;
     const waves = build(0.6 + span, counter);
 
@@ -141,13 +140,6 @@
         if (level) data[i] |= mask;
       }
     });
-    return new PLA.Capture(data, rate, { trigger, source: 'demo' });
+    return new PLA.Capture(data, rate, { trigger, source: 'test' });
   };
-
-  PLA.DEMO_NAMES = ['PWM', 'UART TX', 'SDA', 'SCL', 'SCK', 'MOSI', 'CS', 'CH7'];
-  PLA.DEMO_DECODERS = [
-    { type: 'uart', params: { rx: 1, baud: 115200, invert: false } },
-    { type: 'i2c', params: { sda: 2, scl: 3 } },
-    { type: 'spi', params: { clk: 4, mosi: 5, miso: -1, cs: 6, mode: 0, lsb: false } },
-  ];
 })();

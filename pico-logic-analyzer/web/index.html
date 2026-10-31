@@ -11,18 +11,17 @@
     <meta name="theme-color" content="#06080b" media="(prefers-color-scheme: dark)" />
     <meta name="theme-color" content="#eef0f4" media="(prefers-color-scheme: light)" />
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="css/app.css?v=3" />
-    <script src="js/util.js?v=3" defer></script>
-    <script src="js/boards.js?v=3" defer></script>
-    <script src="js/capture.js?v=3" defer></script>
-    <script src="js/decoders/uart.js?v=3" defer></script>
-    <script src="js/decoders/i2c.js?v=3" defer></script>
-    <script src="js/decoders/spi.js?v=3" defer></script>
-    <script src="js/demo.js?v=3" defer></script>
-    <script src="js/device.js?v=3" defer></script>
-    <script src="js/view.js?v=3" defer></script>
-    <script src="js/export.js?v=3" defer></script>
-    <script src="js/app.js?v=3" defer></script>
+    <link rel="stylesheet" href="css/app.css?v=5" />
+    <script src="js/util.js?v=5" defer></script>
+    <script src="js/boards.js?v=5" defer></script>
+    <script src="js/capture.js?v=5" defer></script>
+    <script src="js/decoders/uart.js?v=5" defer></script>
+    <script src="js/decoders/i2c.js?v=5" defer></script>
+    <script src="js/decoders/spi.js?v=5" defer></script>
+    <script src="js/device.js?v=5" defer></script>
+    <script src="js/view.js?v=5" defer></script>
+    <script src="js/export.js?v=5" defer></script>
+    <script src="js/app.js?v=5" defer></script>
   </head>
   <body>
     <header class="top">
@@ -55,7 +54,6 @@
           </svg>
           Firmware
         </button>
-        <button class="btn ghost" id="demo-btn">Try the demo</button>
         <button class="btn" id="connect-btn">Connect Pico</button>
       </div>
     </header>
@@ -177,12 +175,12 @@
                 </svg>
                 <h1>Nothing captured yet</h1>
                 <p id="empty-text">
-                  Connect a Pico running the analyzer firmware, or try the demo to see UART, I2C and SPI
-                  decoded from the test signals.
+                  Connect a Pico running the analyzer firmware, then press Capture. New to this? Open the
+                  firmware setup first.
                 </p>
                 <div class="empty-actions">
-                  <button class="btn primary" id="empty-demo">Try the demo</button>
-                  <button class="btn" id="empty-connect">Connect Pico</button>
+                  <button class="btn primary" id="empty-connect">Connect Pico</button>
+                  <button class="btn" id="empty-setup">Firmware setup</button>
                 </div>
               </div>
             </div>

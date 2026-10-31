@@ -1,17 +1,11 @@
-// Decoder tests against the demo signals, which are built edge by edge from known bytes.
+// Decoder tests against known signals (see signals.js), built edge by edge from known bytes.
 // Run with: node tests/decoders.test.js
 const assert = require('node:assert/strict');
 const path = require('node:path');
 const web = path.join(__dirname, '..', 'web', 'js');
-for (const f of [
-  'util.js',
-  'capture.js',
-  'decoders/uart.js',
-  'decoders/i2c.js',
-  'decoders/spi.js',
-  'demo.js',
-])
+for (const f of ['util.js', 'capture.js', 'decoders/uart.js', 'decoders/i2c.js', 'decoders/spi.js'])
   require(path.join(web, f));
+require('./signals.js');
 const PLA = globalThis.PLA;
 
 let passed = 0;
@@ -23,7 +17,7 @@ const test = (name, fn) => {
 const data = (lane, kinds = ['data', 'addr']) => lane.items.filter(i => kinds.includes(i.kind));
 
 for (const rate of [2e6, 10e6, 25e6]) {
-  const cap = PLA.demoCapture({ rate, samples: 200000, trigger: { channel: 1, rising: false } });
+  const cap = PLA.testCapture({ rate, samples: 200000, trigger: { channel: 1, rising: false } });
   const ms = (200000 / rate) * 1e3;
 
   test(`UART reads "hello\\n" at ${PLA.fmtRate(rate)}`, () => {
@@ -52,7 +46,7 @@ for (const rate of [2e6, 10e6, 25e6]) {
 }
 
 test('I2C reads address 0x3C and the window commands', () => {
-  const cap = PLA.demoCapture({ rate: 2e6, samples: 200000, trigger: { channel: 2, rising: false } });
+  const cap = PLA.testCapture({ rate: 2e6, samples: 200000, trigger: { channel: 2, rising: false } });
   const items = PLA.DECODERS.i2c.decode(cap, { sda: 2, scl: 3 }).lanes[0].items;
   assert.equal(items[0].kind, 'start');
   assert.equal(items[1].kind, 'addr');
@@ -67,20 +61,20 @@ test('I2C reads address 0x3C and the window commands', () => {
 });
 
 test('UART flags a rate that is too low', () => {
-  const cap = PLA.demoCapture({ rate: 200e3, samples: 20000 });
+  const cap = PLA.testCapture({ rate: 200e3, samples: 20000 });
   const r = PLA.DECODERS.uart.decode(cap, { rx: 1, baud: 115200 });
   assert.ok(r.warning);
 });
 
 test('Trigger puts the edge at sample 0', () => {
-  const cap = PLA.demoCapture({ rate: 1e6, samples: 4000, trigger: { channel: 0, rising: true } });
+  const cap = PLA.testCapture({ rate: 1e6, samples: 4000, trigger: { channel: 0, rising: true } });
   assert.equal(cap.bit(0, 0), 1);
-  const fall = PLA.demoCapture({ rate: 1e6, samples: 4000, trigger: { channel: 0, rising: false } });
+  const fall = PLA.testCapture({ rate: 1e6, samples: 4000, trigger: { channel: 0, rising: false } });
   assert.equal(fall.bit(0, 0), 0);
 });
 
 test('Edges match the raw data', () => {
-  const cap = PLA.demoCapture({ rate: 5e6, samples: 50000 });
+  const cap = PLA.testCapture({ rate: 5e6, samples: 50000 });
   for (let ch = 0; ch < 8; ch++) {
     let n = 0;
     for (let i = 1; i < cap.n; i++) if (cap.bit(ch, i) !== cap.bit(ch, i - 1)) n++;
@@ -89,7 +83,7 @@ test('Edges match the raw data', () => {
 });
 
 test('LSB-first SPI and mode 1 do not crash and give different bytes', () => {
-  const cap = PLA.demoCapture({ rate: 10e6, samples: 100000, trigger: { channel: 6, rising: false } });
+  const cap = PLA.testCapture({ rate: 10e6, samples: 100000, trigger: { channel: 6, rising: false } });
   const lsb = PLA.DECODERS.spi.decode(cap, { clk: 4, mosi: 5, miso: -1, cs: 6, mode: 0, lsb: true });
   assert.equal(lsb.lanes[0].items[0].value, 0b00001010); // 'P' = 0x50 reversed
 });

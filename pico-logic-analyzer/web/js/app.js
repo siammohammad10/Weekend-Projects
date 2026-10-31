@@ -27,8 +27,6 @@
   let cap = null,
     device = null,
     busy = false,
-    demo = false,
-    demoCounter = 7,
     results = [],
     logRows = [],
     freshLog = false,
@@ -157,14 +155,11 @@
 
   function setConn() {
     const el = $('#conn');
-    el.className = 'conn' + (device ? ' on' : demo ? ' demo' : '');
+    el.className = 'conn' + (device ? ' on' : '');
     el.querySelector('span').textContent = device
       ? `${PLA.boardShortName(device.info.board)} connected · ${PLA.fmtCount(device.info.maxSamples)} samples`
-      : demo
-        ? 'Demo signals'
-        : 'Not connected';
+      : 'Not connected';
     $('#connect-btn').textContent = device ? 'Disconnect' : 'Connect Pico';
-    $('#demo-btn').hidden = !!device || demo;
   }
 
   function setBusy(on) {
@@ -182,10 +177,8 @@
 
   async function capture() {
     if (busy) return stop();
-    if (!device) {
-      if (!demo) startDemo(false);
-      return demoCapture();
-    }
+    // Captures only ever come from a connected Pico.
+    if (!device) return connect();
     const trig = trigger();
     setBusy(true);
     status(
@@ -213,31 +206,6 @@
     if (device) device.abort().catch(() => {});
   }
 
-  function demoCapture() {
-    setBusy(true);
-    const trig = trigger();
-    status(`<span class="spin"></span>Capturing the demo signals…`);
-    setTimeout(() => {
-      try {
-        load(PLA.demoCapture({ rate: S.rate, samples: S.samples, trigger: trig, counter: demoCounter++ }));
-      } finally {
-        setBusy(false);
-      }
-    }, 260);
-  }
-
-  function startDemo(captureNow = true) {
-    demo = true;
-    if (S.names.every((n, i) => n === GENERIC[i])) S.names = PLA.DEMO_NAMES.slice();
-    if (!S.decoders.length)
-      S.decoders = PLA.DEMO_DECODERS.map(d => ({ ...d, params: { ...d.params }, id: nextId++ }));
-    fillTrigger();
-    save();
-    setConn();
-    renderDecoders();
-    if (captureNow) demoCapture();
-  }
-
   function load(c) {
     const same = cap && cap.n === c.n && cap.rate === c.rate;
     cap = c;
@@ -251,7 +219,6 @@
         ? `triggered on a ${c.trigger.rising ? 'rising' : 'falling'} edge of ${esc(S.names[c.trigger.channel])}`
         : 'no trigger',
     ];
-    if (c.source === 'demo') parts.push('demo signals');
     if (c.transferMs) parts.push(`sent over USB in ${PLA.fmtTime(c.transferMs / 1000, 2)}`);
     status(parts.join(' · '));
     updateTools();
@@ -580,9 +547,7 @@
       return;
     }
     if (!PLA.Device.supported) {
-      toast(
-        "This browser can't talk to USB serial. Use Chrome or Edge on a computer. The demo still works here.",
-      );
+      toast("This browser can't talk to USB serial. Open this page in Chrome or Edge on a computer.");
       return;
     }
     const d = new PLA.Device();
@@ -590,7 +555,6 @@
       status(`<span class="spin"></span>Pick the Pico in the browser's list…`);
       await d.connect();
       device = d;
-      demo = false;
       device.onDisconnect = () => {
         device = null;
         setConn();
@@ -622,8 +586,10 @@
   $('#connect-btn').addEventListener('click', connect);
   $('#empty-connect').addEventListener('click', connect);
   $('#setup-connect').addEventListener('click', connect);
-  $('#demo-btn').addEventListener('click', () => startDemo());
-  $('#empty-demo').addEventListener('click', () => startDemo());
+  $('#empty-setup').addEventListener('click', () => {
+    setSetup(true);
+    scrollTo({ top: 0, behavior: 'smooth' });
+  });
   $('#zoom-in').addEventListener('click', () => view.zoomAt(view.width / 2, 0.5));
   $('#zoom-out').addEventListener('click', () => view.zoomAt(view.width / 2, 2));
   $('#fit').addEventListener('click', () => view.fit());
@@ -672,13 +638,11 @@
   updateTools();
   if (!PLA.Device.supported) {
     $('#empty-text').textContent =
-      "This browser can't talk to USB serial, so connecting a Pico needs Chrome or Edge on a computer. The demo works anywhere.";
+      "This browser can't talk to USB serial, so connecting a Pico needs Chrome or Edge on a computer.";
     $('#empty-connect').hidden = true;
     $('#setup-browser').textContent =
       "This browser can't connect to a Pico. Download the firmware here, then open this page in Chrome or Edge on a computer.";
   }
-  const wantDemo = new URLSearchParams(location.search).has('demo');
-  // First visit: show the setup steps, unless the link asked for the demo.
-  setSetup(PLA.store.get('pla-setup-open', !wantDemo), false);
-  if (wantDemo) startDemo();
+  // First visit: show the setup steps.
+  setSetup(PLA.store.get('pla-setup-open', true), false);
 })();

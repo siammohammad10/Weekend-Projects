@@ -4,9 +4,7 @@ An 8-channel logic analyzer made from one Raspberry Pi Pico. The Pico samples it
 
 It runs on every Pico: the Pico, Pico H, Pico W, Pico WH, Pico 2 and Pico 2 W.
 
-**[Try it in your browser](https://siammohammad10.github.io/Weekend-Projects/pico-logic-analyzer/web/?demo)**. The demo plays the same test signals the firmware makes, so you can try the decoders without a Pico.
-
-![The analyzer in dark mode, decoding UART, I2C and SPI](docs/app-dark.png)
+**[Open the app](https://siammohammad10.github.io/Weekend-Projects/pico-logic-analyzer/web/)**. It needs a Pico with the firmware on it: everything you see in it comes from your board.
 
 ## What it does
 
@@ -23,8 +21,6 @@ It runs on every Pico: the Pico, Pico H, Pico W, Pico WH, Pico 2 and Pico 2 W.
 | Inputs | 3.3 V only (see [Safety](#safety)) |
 
 Scroll to zoom, drag to pan, click to place cursor A, and shift-click or right-click for cursor B. Click any row in the decoded list to jump to it.
-
-![An I2C write to an SSD1306 OLED, decoded](docs/i2c-dark.png)
 
 ## Set up your Pico
 
@@ -60,7 +56,7 @@ You only need to flash once. The firmware stays on the Pico when it's unplugged.
 
 ### 3. Connect from the browser
 
-1. Open the [web app](https://siammohammad10.github.io/Weekend-Projects/pico-logic-analyzer/web/) in **Chrome or Edge** on Windows, macOS, Linux or ChromeOS. Firefox works from version 151. Safari and phones can't use USB serial yet, but the demo works there.
+1. Open the [web app](https://siammohammad10.github.io/Weekend-Projects/pico-logic-analyzer/web/) in **Chrome or Edge** on Windows, macOS, Linux or ChromeOS. Firefox works from version 151. Safari and phones can't use USB serial yet.
 2. Click **Connect Pico**. The browser opens a list that only shows Raspberry Pi devices. Pick the one there and click **Connect**.
 3. The top of the page shows which board it found, for example *Pico W connected · 200,000 samples*.
 
@@ -132,11 +128,11 @@ pico-logic-analyzer/
 │       ├── capture.js        Samples, edges and measurements
 │       ├── view.js           The waveform canvas
 │       ├── decoders/         uart.js, i2c.js, spi.js
-│       ├── demo.js           Demo signals
 │       ├── export.js         VCD and CSV
 │       └── app.js            The page
 ├── tests/
-│   └── decoders.test.js
+│   ├── decoders.test.js
+│   └── signals.js            Known signals for the tests (not used by the app)
 └── docs/
 ```
 

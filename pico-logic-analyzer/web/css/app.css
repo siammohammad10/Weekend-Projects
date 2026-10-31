@@ -197,11 +197,7 @@ code {
 .conn.on i {
   background: var(--good);
 }
-.conn.demo i {
-  background: var(--accent);
-}
-.conn.on i::after,
-.conn.demo i::after {
+.conn.on i::after {
   content: '';
   position: absolute;
   inset: -4px;
@@ -209,9 +205,6 @@ code {
   border: 2px solid currentColor;
   color: var(--good);
   animation: ping 2.4s var(--ease) infinite;
-}
-.conn.demo i::after {
-  color: var(--accent);
 }
 @keyframes ping {
   0% {
@@ -516,6 +509,10 @@ select:disabled {
   font-size: 13px;
   color: var(--muted);
   font-variant-numeric: tabular-nums;
+}
+/* An empty status line takes no room, so the toolbar and the scope sit one gap apart. */
+.status:empty {
+  display: none;
 }
 .status.fade {
   animation: fade 0.45s var(--ease);
