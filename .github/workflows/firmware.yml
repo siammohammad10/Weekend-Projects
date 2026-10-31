@@ -1,0 +1,39 @@
+name: Firmware
+
+# Builds the Pico Logic Analyzer firmware for every board whenever it changes,
+# and keeps the .uf2 files from each run as downloadable artifacts.
+on:
+  push:
+    paths:
+      - 'pico-logic-analyzer/firmware/**'
+      - '.github/workflows/firmware.yml'
+  pull_request:
+    paths:
+      - 'pico-logic-analyzer/firmware/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install the Arm toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib cmake ninja-build
+
+      - name: Get the Pico SDK
+        run: |
+          git clone --depth 1 --branch 2.1.1 https://github.com/raspberrypi/pico-sdk.git "$HOME/pico-sdk"
+          git -C "$HOME/pico-sdk" submodule update --init --depth 1 lib/tinyusb
+
+      - name: Build every board
+        run: |
+          export PICO_SDK_PATH="$HOME/pico-sdk"
+          ./pico-logic-analyzer/firmware/build-all.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pico-logic-analyzer-firmware
+          path: pico-logic-analyzer/firmware/dist/*.uf2

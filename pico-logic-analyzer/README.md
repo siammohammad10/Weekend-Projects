@@ -1,5 +1,7 @@
 # Pico Logic Analyzer
 
+[![Firmware build](https://github.com/siammohammad10/Weekend-Projects/actions/workflows/firmware.yml/badge.svg)](https://github.com/siammohammad10/Weekend-Projects/actions/workflows/firmware.yml)
+
 An 8-channel logic analyzer made from one Raspberry Pi Pico. The Pico samples its pins into RAM, and a web page draws the waveforms and decodes UART, I2C and SPI. There's nothing to install: flash the firmware, open the page in Chrome or Edge, and click Connect.
 
 It runs on every Pico: the Pico, Pico H, Pico W, Pico WH, Pico 2 and Pico 2 W.
