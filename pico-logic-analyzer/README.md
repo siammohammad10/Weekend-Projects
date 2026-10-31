@@ -6,6 +6,8 @@ It runs on every Pico: the Pico, Pico H, Pico W, Pico WH, Pico 2 and Pico 2 W.
 
 **[Open the app](https://siammohammad10.github.io/Weekend-Projects/pico-logic-analyzer/web/)**. It needs a Pico with the firmware on it: everything you see in it comes from your board.
 
+![The app before connecting: the firmware setup steps, the capture settings and the eight channels](docs/app.png)
+
 ## What it does
 
 | | |
@@ -21,6 +23,10 @@ It runs on every Pico: the Pico, Pico H, Pico W, Pico WH, Pico 2 and Pico 2 W.
 | Inputs | 3.3 V only (see [Safety](#safety)) |
 
 Scroll to zoom, drag to pan, click to place cursor A, and shift-click or right-click for cursor B. Click any row in the decoded list to jump to it.
+
+Add a decoder for each bus you want read, and pick which channels it uses. Rename the channels to match your wiring and the names follow everywhere. The decoded bytes show up under the waveform and in a list you can export.
+
+![Decoders for UART, I2C and SPI set up for the test wiring, next to the measurement cursors](docs/decoders.png)
 
 ## Set up your Pico
 
@@ -71,7 +77,9 @@ On Linux, if the Pico shows up but won't connect, your account may not have perm
 
 ### Test wiring
 
-The firmware makes its own test signals on spare pins, so you can check everything with a few jumper wires and no other board.
+The firmware makes its own test signals on spare pins, so you can check everything with a few jumper wires and no other board. Run a jumper from each highlighted pin on the right side of the board to the pin of the same color on the left.
+
+![Pico pinout with the seven test jumpers highlighted in matching colors](docs/wiring.png)
 
 | Signal | Comes out of | Jumper it to |
 | --- | --- | --- |
@@ -89,11 +97,7 @@ To try the decoders, add UART on channel 1, I2C on channels 2 and 3, and SPI on 
 
 ## How it works
 
-```
- pins ──▶ PIO ──▶ DMA ──▶ RAM buffer ──USB──▶ Web Serial ──▶ waveform + decoders
-         (8 bits    (no CPU)  (1 byte per                    (all in the browser)
-          per tick)            sample)
-```
+![How a capture travels: pins to PIO to DMA to RAM on the Pico, then over USB serial to the browser for waveforms and decoding](docs/flow.png)
 
 **Firmware.** One PIO state machine runs a program that's built when each capture starts. With a trigger, it first waits for the opposite level and then for the edge. After that it runs `in pins, 8` on every tick of its clock. Autopush packs four samples into each 32-bit word, and a DMA channel moves them from the FIFO into RAM without the CPU. When the buffer is full, the Pico sends it over USB serial. The system clock runs at 100 MHz, so every sample rate the app offers is a whole-number divider.
 
