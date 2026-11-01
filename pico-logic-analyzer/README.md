@@ -12,6 +12,12 @@ It runs on every Pico: the Pico, Pico H, Pico W, Pico WH, Pico 2 and Pico 2 W.
 
 A real capture from a Pico H with the [test wiring](#test-wiring): the 1 kHz PWM on CH0, `hello` over UART on CH1, the I2C write to the OLED on CH2 and CH3, and `PICO` over SPI on CH4 to CH6, each with its decoder.
 
+Zoomed in on the I2C traffic, the decoder reads each byte the Pico sends to the OLED:
+
+![The I2C write to the OLED, zoomed in and decoded byte by byte](docs/i2c-closeup.png)
+
+The first write goes to address `0x3C` and sets the drawing window: `00` (commands follow), `21 22 5D` (columns 34 to 93) and `22 03 04` (pages 3 and 4). The second write starts with `40` (data follows) and carries the pixel columns of the counter's digits.
+
 Before you connect, the app shows the firmware setup steps:
 
 ![The app before connecting: the firmware setup steps, the capture settings and the eight channels](docs/app.png)
