@@ -1,0 +1,35 @@
+name: Release
+
+# Publishes a Pico Logic Analyzer release whenever pico-logic-analyzer/VERSION changes on main.
+# The release gets the notes from RELEASE_NOTES.md and the .uf2 files from firmware/dist.
+# Bump VERSION (and update the notes) to publish the next one.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'pico-logic-analyzer/VERSION'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Publish the release if this version is new
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          v=$(tr -d ' \r\n' < pico-logic-analyzer/VERSION)
+          tag="pico-logic-analyzer-v$v"
+          if gh release view "$tag" > /dev/null 2>&1; then
+            echo "$tag is already released"
+            exit 0
+          fi
+          gh release create "$tag" pico-logic-analyzer/firmware/dist/*.uf2 \
+            --target "$GITHUB_SHA" \
+            --title "Pico Logic Analyzer $v" \
+            --notes-file pico-logic-analyzer/RELEASE_NOTES.md
