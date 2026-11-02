@@ -1,0 +1,23 @@
+# Unity makes these on your machine. They don't belong in git.
+/Library/
+/Temp/
+/Obj/
+/Build/
+/Builds/
+/Logs/
+/UserSettings/
+/MemoryCaptures/
+/Recordings/
+*.csproj
+*.sln
+*.slnx
+*.pidb
+*.userprefs
+.vs/
+.vscode/
+.idea/
+*.apk
+*.aab
+
+# Test output
+/tests/bin/

@@ -1,0 +1,21 @@
+name: Heat Check tests
+
+on:
+  push:
+    paths:
+      - 'heat-check/**'
+      - '.github/workflows/heat-check.yml'
+  pull_request:
+    paths:
+      - 'heat-check/**'
+  workflow_dispatch:
+
+jobs:
+  heat-model:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Mono
+        run: sudo apt-get update && sudo apt-get install -y mono-devel
+      - name: Run the heat model tests
+        run: heat-check/tests/run-tests.sh
